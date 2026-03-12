@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VeggieGuard — AI Freshness Detection</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sage: #4a7c59;
+  --sage-dark: #2d5a3d;
+  --sage-deep: #1a3d28;
+  --sage-light: #74a882;
+  --sage-pale: #e8f4ec;
+  --sage-mist: #f2f9f4;
+  --mint: #a8d5b5;
+  --gold: #b5875a;
+  --cream: #fafdf8;
+  --text: #1a2e1f;
+  --muted: #5a7264;
+  --border: #d4e8d8;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background: var(--cream);
+  color: var(--text);
+  overflow-x: hidden;
+}
+
+/* ── NAV ── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 999;
+  background: rgba(250,253,248,.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 1rem 5%;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.nav-brand { display: flex; align-items: center; gap: .6rem; text-decoration: none; }
+.nav-logo { width: 36px; height: 36px; background: var(--sage-deep); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+.nav-name { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; font-weight: 600; color: var(--sage-deep); }
+.nav-links { display: flex; align-items: center; gap: 2rem; list-style: none; }
+.nav-links a { text-decoration: none; color: var(--muted); font-size: .875rem; font-weight: 500; transition: color .2s; }
+.nav-links a:hover { color: var(--sage); }
+.nav-cta {
+  background: var(--sage-deep); color: #fff !important;
+  padding: .5rem 1.25rem; border-radius: 8px;
+  transition: background .2s !important;
+}
+.nav-cta:hover { background: var(--sage) !important; color: #fff; }
+.nav-toggle { display: none; background: none; border: none; cursor: pointer; font-size: 1.4rem; color: var(--text); }
+
+/* ── HERO ── */
+.hero {
+  min-height: 100vh;
+  background: linear-gradient(160deg, var(--sage-deep) 0%, #1e4d30 40%, #2d6b45 100%);
+  display: flex; align-items: center;
+  padding: 7rem 5% 5rem;
+  position: relative; overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 60% 50% at 80% 40%, rgba(168,213,181,.12) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 60% at 10% 80%, rgba(74,124,89,.3) 0%, transparent 60%);
+}
+.hero-grid {
+  max-width: 1200px; margin: 0 auto; width: 100%;
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 4rem; align-items: center;
+  position: relative; z-index: 1;
+}
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: .5rem;
+  background: rgba(168,213,181,.15);
+  border: 1px solid rgba(168,213,181,.3);
+  color: var(--mint); border-radius: 30px;
+  padding: .35rem 1rem; font-size: .72rem;
+  font-weight: 700; letter-spacing: .1em;
+  text-transform: uppercase; margin-bottom: 1.5rem;
+}
+.hero h1 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(2.8rem, 5vw, 4.2rem);
+  color: #fff; line-height: 1.1;
+  margin-bottom: 1.5rem;
+}
+.hero h1 em { color: var(--mint); font-style: italic; }
+.hero-sub {
+  color: rgba(255,255,255,.72);
+  font-size: 1.05rem; line-height: 1.85;
+  margin-bottom: 2.5rem; max-width: 480px;
+}
+.hero-btns { display: flex; gap: 1rem; flex-wrap: wrap; }
+.btn-primary {
+  background: #fff; color: var(--sage-deep);
+  padding: .8rem 1.75rem; border-radius: 10px;
+  font-weight: 700; font-size: .9rem;
+  text-decoration: none; display: inline-flex;
+  align-items: center; gap: .5rem;
+  transition: transform .2s, box-shadow .2s;
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.2); }
+.btn-ghost {
+  border: 1.5px solid rgba(255,255,255,.3); color: #fff;
+  padding: .8rem 1.75rem; border-radius: 10px;
+  font-weight: 600; font-size: .9rem;
+  text-decoration: none; display: inline-flex;
+  align-items: center; gap: .5rem;
+  transition: background .2s;
+}
+.btn-ghost:hover { background: rgba(255,255,255,.1); }
+
+/* Hero visual */
+.hero-visual { position: relative; }
+.hero-phone {
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 28px;
+  padding: 1.5rem;
+  backdrop-filter: blur(10px);
+}
+.phone-screen {
+  background: #0f2318;
+  border-radius: 18px;
+  padding: 1.5rem;
+  min-height: 380px;
+  display: flex; flex-direction: column; gap: 1rem;
+}
+.scan-frame {
+  background: rgba(74,124,89,.2);
+  border: 2px solid var(--sage-light);
+  border-radius: 12px;
+  height: 180px;
+  display: flex; align-items: center; justify-content: center;
+  position: relative; overflow: hidden;
+  font-size: 4rem;
+}
+.scan-line {
+  position: absolute; left: 0; right: 0; height: 2px;
+  background: linear-gradient(to right, transparent, var(--mint), transparent);
+  animation: scan 2.5s ease-in-out infinite;
+}
+@keyframes scan { 0%,100% { top: 10%; } 50% { top: 85%; } }
+
+.scan-corners::before, .scan-corners::after {
+  content: '';
+  position: absolute;
+  width: 20px; height: 20px;
+  border-color: var(--mint);
+  border-style: solid;
+}
+.scan-corners::before { top: 8px; left: 8px; border-width: 2px 0 0 2px; }
+.scan-corners::after { bottom: 8px; right: 8px; border-width: 0 2px 2px 0; }
+
+.result-chips { display: flex; gap: .5rem; flex-wrap: wrap; }
+.chip {
+  padding: .3rem .8rem; border-radius: 20px;
+  font-size: .72rem; font-weight: 600;
+}
+.chip-fresh { background: rgba(74,124,89,.3); color: var(--mint); }
+.chip-warn { background: rgba(181,135,90,.25); color: #d4a574; }
+.chip-bad { background: rgba(180,60,60,.25); color: #e07878; }
+
+.ai-bubble {
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 10px; padding: .75rem 1rem;
+  font-size: .78rem; color: rgba(255,255,255,.8);
+  line-height: 1.5;
+}
+.ai-bubble strong { color: var(--mint); }
+
+.hero-floats { position: absolute; }
+.float-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: .75rem 1rem;
+  box-shadow: 0 8px 30px rgba(0,0,0,.15);
+  font-size: .78rem; font-weight: 600;
+  color: var(--text);
+  display: flex; align-items: center; gap: .5rem;
+  white-space: nowrap;
+  animation: float 4s ease-in-out infinite;
+}
+.float-1 { position: absolute; top: -1.5rem; right: -1.5rem; animation-delay: 0s; }
+.float-2 { position: absolute; bottom: 2rem; left: -2rem; animation-delay: 1.5s; }
+@keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+.dot { width: 8px; height: 8px; border-radius: 50%; }
+.dot-green { background: #4caf50; }
+.dot-orange { background: #ff9800; }
+
+/* ── PROBLEM STRIP ── */
+.problem-strip {
+  background: var(--sage-pale);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 3rem 5%;
+}
+.problem-inner { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(3,1fr); gap: 2rem; }
+.problem-stat { text-align: center; }
+.stat-number {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 3rem; font-weight: 600;
+  color: var(--sage-deep); line-height: 1;
+  margin-bottom: .35rem;
+}
+.stat-label { font-size: .875rem; color: var(--muted); line-height: 1.5; }
+
+/* ── SECTION SHARED ── */
+section { padding: 6rem 5%; }
+.section-inner { max-width: 1200px; margin: 0 auto; }
+.section-tag {
+  display: inline-flex; align-items: center; gap: .4rem;
+  background: var(--sage-pale);
+  color: var(--sage); border-radius: 30px;
+  padding: .3rem .9rem; font-size: .72rem;
+  font-weight: 700; text-transform: uppercase;
+  letter-spacing: .08em; margin-bottom: 1rem;
+}
+.section-heading {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(2rem, 3.5vw, 2.8rem);
+  color: var(--sage-deep); line-height: 1.2;
+  margin-bottom: 1rem;
+}
+.section-heading em { color: var(--sage); font-style: italic; }
+.section-sub { color: var(--muted); font-size: 1rem; line-height: 1.85; max-width: 580px; }
+
+/* ── ABOUT ── */
+.about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5rem; align-items: center; }
+.about-image {
+  background: linear-gradient(135deg, var(--sage-deep), #2d6b45);
+  border-radius: 24px;
+  padding: 2.5rem;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+}
+.about-tile {
+  background: rgba(255,255,255,.09);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 14px;
+  padding: 1.25rem;
+  text-align: center;
+  transition: background .2s;
+}
+.about-tile:hover { background: rgba(255,255,255,.15); }
+.about-tile-icon { font-size: 2rem; margin-bottom: .5rem; }
+.about-tile-val { font-family: 'Cormorant Garamond', serif; font-size: 1.6rem; color: var(--mint); }
+.about-tile-label { font-size: .72rem; color: rgba(255,255,255,.6); margin-top: .2rem; text-transform: uppercase; letter-spacing: .06em; }
+.about-tiles-span { grid-column: 1 / -1; }
+
+.problem-callout {
+  background: #fff3cd;
+  border-left: 4px solid var(--gold);
+  border-radius: 0 12px 12px 0;
+  padding: 1.25rem 1.5rem;
+  margin-top: 1.75rem;
+  font-size: .9rem; color: #6b4c1e; line-height: 1.7;
+}
+.problem-callout strong { display: block; margin-bottom: .25rem; font-size: 1rem; }
+
+/* ── HOW IT WORKS ── */
+.how-section { background: var(--sage-mist); }
+.how-header { text-align: center; margin-bottom: 3.5rem; }
+.how-header .section-sub { margin: 0 auto; }
+.steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; position: relative; }
+.steps::before {
+  content: '';
+  position: absolute;
+  top: 2.75rem; left: 12%; right: 12%;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--border), var(--border), transparent);
+}
+.step {
+  background: #fff;
+  border-radius: 18px;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  border: 1px solid var(--border);
+  position: relative; z-index: 1;
+  transition: transform .25s, box-shadow .25s;
+}
+.step:hover { transform: translateY(-6px); box-shadow: 0 16px 40px rgba(45,90,61,.1); }
+.step-num {
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  background: var(--sage-pale);
+  border: 2px solid var(--sage-light);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 1.25rem;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.4rem; font-weight: 600; color: var(--sage-deep);
+}
+.step-icon { font-size: 1.75rem; margin-bottom: .75rem; }
+.step-title { font-weight: 700; font-size: .95rem; color: var(--text); margin-bottom: .5rem; }
+.step-desc { font-size: .8rem; color: var(--muted); line-height: 1.65; }
+
+/* ── BENEFITS ── */
+.benefits-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 5rem; align-items: center; }
+.benefits-list { display: flex; flex-direction: column; gap: 1.25rem; margin-top: 2rem; }
+.benefit-item {
+  display: flex; gap: 1rem; align-items: flex-start;
+  padding: 1.25rem;
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  transition: border-color .2s, box-shadow .2s;
+}
+.benefit-item:hover { border-color: var(--sage-light); box-shadow: 0 4px 16px rgba(74,124,89,.08); }
+.benefit-icon-wrap {
+  width: 46px; height: 46px; flex-shrink: 0;
+  background: var(--sage-pale);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.3rem;
+}
+.benefit-title { font-weight: 700; font-size: .95rem; color: var(--text); margin-bottom: .3rem; }
+.benefit-desc { font-size: .825rem; color: var(--muted); line-height: 1.6; }
+
+.benefits-visual {
+  background: linear-gradient(160deg, var(--sage-deep), #245038);
+  border-radius: 24px;
+  padding: 2.5rem;
+  color: #fff;
+}
+.bv-title { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; color: var(--mint); margin-bottom: 1.5rem; }
+.savings-item { margin-bottom: 1.25rem; }
+.savings-label { font-size: .78rem; font-weight: 600; margin-bottom: .4rem; display: flex; justify-content: space-between; color: rgba(255,255,255,.8); }
+.savings-bar { height: 8px; background: rgba(255,255,255,.1); border-radius: 4px; overflow: hidden; }
+.savings-fill { height: 100%; border-radius: 4px; background: linear-gradient(to right, var(--sage-light), var(--mint)); }
+.bv-total {
+  margin-top: 1.75rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(255,255,255,.1);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.bv-total-label { font-size: .8rem; color: rgba(255,255,255,.6); }
+.bv-total-val { font-family: 'Cormorant Garamond', serif; font-size: 2rem; color: #fff; }
+
+/* ── MISSION ── */
+.mission-section {
+  background: linear-gradient(160deg, var(--sage-deep) 0%, #1e4d30 60%, #2d6b45 100%);
+  color: #fff;
+}
+.mission-inner { max-width: 1200px; margin: 0 auto; }
+.mission-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5rem; align-items: center; }
+.mission-section .section-tag { background: rgba(168,213,181,.15); color: var(--mint); border: 1px solid rgba(168,213,181,.25); }
+.mission-section .section-heading { color: #fff; }
+.mission-section .section-sub { color: rgba(255,255,255,.72); }
+.mission-cards { display: flex; flex-direction: column; gap: 1.25rem; }
+.mission-card {
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 16px;
+  padding: 1.5rem;
+  display: flex; gap: 1.25rem; align-items: flex-start;
+  transition: background .2s;
+}
+.mission-card:hover { background: rgba(255,255,255,.12); }
+.mc-icon { font-size: 2rem; flex-shrink: 0; }
+.mc-title { font-weight: 700; font-size: 1rem; color: #fff; margin-bottom: .35rem; }
+.mc-desc { font-size: .825rem; color: rgba(255,255,255,.65); line-height: 1.65; }
+
+/* ── WHY CHOOSE US ── */
+.why-section { background: var(--sage-mist); }
+.why-header { text-align: center; margin-bottom: 3.5rem; }
+.why-header .section-sub { margin: 0 auto; }
+.why-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+.why-card {
+  background: #fff;
+  border-radius: 20px;
+  padding: 2rem;
+  border: 1px solid var(--border);
+  position: relative; overflow: hidden;
+  transition: transform .25s, box-shadow .25s;
+}
+.why-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 4px;
+  background: linear-gradient(to right, var(--sage), var(--sage-light));
+  opacity: 0;
+  transition: opacity .25s;
+}
+.why-card:hover { transform: translateY(-6px); box-shadow: 0 20px 50px rgba(45,90,61,.1); }
+.why-card:hover::before { opacity: 1; }
+.why-icon { font-size: 2.5rem; margin-bottom: 1.25rem; }
+.why-title { font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; color: var(--sage-deep); margin-bottom: .6rem; }
+.why-desc { font-size: .85rem; color: var(--muted); line-height: 1.75; }
+.why-vs {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  display: flex; gap: .5rem; align-items: center;
+  font-size: .72rem; color: var(--sage); font-weight: 600;
+}
+
+/* ── CTA ── */
+.cta-section {
+  background: var(--sage-pale);
+  border-top: 1px solid var(--border);
+  padding: 6rem 5%;
+  text-align: center;
+}
+.cta-inner { max-width: 640px; margin: 0 auto; }
+.cta-inner h2 { font-family: 'Cormorant Garamond', serif; font-size: 2.8rem; color: var(--sage-deep); margin-bottom: 1rem; }
+.cta-inner p { color: var(--muted); font-size: 1rem; line-height: 1.8; margin-bottom: 2rem; }
+.cta-btns { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+.btn-sage {
+  background: var(--sage-deep); color: #fff;
+  padding: .85rem 2rem; border-radius: 10px;
+  font-weight: 700; font-size: .95rem;
+  text-decoration: none; display: inline-flex;
+  align-items: center; gap: .5rem;
+  transition: background .2s, transform .1s;
+}
+.btn-sage:hover { background: var(--sage); transform: translateY(-2px); }
+.btn-outline-sage {
+  border: 2px solid var(--sage);
+  color: var(--sage);
+  padding: .85rem 2rem; border-radius: 10px;
+  font-weight: 700; font-size: .95rem;
+  text-decoration: none; display: inline-flex;
+  align-items: center; gap: .5rem;
+  transition: all .2s;
+}
+.btn-outline-sage:hover { background: var(--sage); color: #fff; }
+
+/* ── FOOTER ── */
+footer {
+  background: var(--sage-deep);
+  color: rgba(255,255,255,.6);
+  padding: 2rem 5%;
+  text-align: center;
+  font-size: .825rem;
+}
+footer strong { color: var(--mint); }
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fade-up { animation: fadeUp .7s ease both; }
+.d1 { animation-delay: .1s; } .d2 { animation-delay: .2s; }
+.d3 { animation-delay: .3s; } .d4 { animation-delay: .4s; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 968px) {
+  .hero-grid, .about-grid, .benefits-grid, .mission-grid { grid-template-columns: 1fr; gap: 3rem; }
+  .steps { grid-template-columns: repeat(2, 1fr); }
+  .steps::before { display: none; }
+  .why-grid { grid-template-columns: repeat(2, 1fr); }
+  .problem-inner { grid-template-columns: 1fr; gap: 1.5rem; }
+  .hero-visual { display: none; }
+}
+@media (max-width: 640px) {
+  nav { padding: 1rem; }
+  .nav-links { display: none; }
+  .nav-toggle { display: block; }
+  section { padding: 4rem 1.25rem; }
+  .why-grid, .steps { grid-template-columns: 1fr; }
+  .hero { padding: 6rem 1.25rem 4rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-brand">
+    <div class="nav-logo">🥦</div>
+    <span class="nav-name">VeggieGuard</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#how">How It Works</a></li>
+    <li><a href="#benefits">Benefits</a></li>
+    <li><a href="#mission">Mission</a></li>
+    <li><a href="#why">Why Us</a></li>
+ <li><a href="/login/" class="nav-cta">Get Started</a></li>
+  </ul>
+  <button class="nav-toggle">☰</button>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="home">
+  <div class="hero-grid">
+    <div>
+      <div class="hero-eyebrow fade-up">🌿 AI-Powered Freshness Detection</div>
+      <h1 class="fade-up d1">
+        Stop wasting food.<br>
+        Start <em>guarding</em><br>
+        your vegetables.
+      </h1>
+      <p class="hero-sub fade-up d2">
+        VeggieGuard uses computer vision and natural language AI to detect vegetable spoilage before it happens — no expensive hardware, no guesswork, just smarter eating.
+      </p>
+      <div class="hero-btns fade-up d3">
+        <a href="#how" class="btn-primary">🔍 See How It Works</a>
+        <a href="#about" class="btn-ghost">Learn More →</a>
+      </div>
+    </div>
+
+    <!-- Animated phone mockup -->
+    <div class="hero-visual fade-up d4">
+      <div class="hero-phone">
+        <div class="phone-screen">
+          <div class="scan-frame scan-corners">
+            🥕
+            <div class="scan-line"></div>
+          </div>
+          <div class="result-chips">
+            <span class="chip chip-fresh">✓ Carrot — Fresh</span>
+            <span class="chip chip-warn">⚠ Spinach — Check Soon</span>
+            <span class="chip chip-bad">✕ Tomato — Spoiling</span>
+          </div>
+          <div class="ai-bubble">
+            <strong>VeggieGuard AI:</strong> Your spinach shows early signs of wilting. Use within 2 days. Consider a stir-fry or smoothie tonight!
+          </div>
+        </div>
+      </div>
+      <div class="float-card float-1">
+        <span class="dot dot-green"></span> 3 vegetables scanned
+      </div>
+      <div class="float-card float-2">
+        <span class="dot dot-orange"></span> 1 needs attention
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROBLEM STATS -->
+<div class="problem-strip">
+  <div class="problem-inner">
+    <div class="problem-stat">
+      <div class="stat-number">1/3</div>
+      <div class="stat-label">of all food produced globally<br>is lost or wasted each year</div>
+    </div>
+    <div class="problem-stat">
+      <div class="stat-number">$1,500</div>
+      <div class="stat-label">average annual household loss<br>from discarded food</div>
+    </div>
+    <div class="problem-stat">
+      <div class="stat-number">45%</div>
+      <div class="stat-label">of fruits & vegetables are lost<br>before they reach the table</div>
+    </div>
+  </div>
+</div>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="section-inner about-grid">
+    <div class="about-image">
+      <div class="about-tile">
+        <div class="about-tile-icon">🔬</div>
+        <div class="about-tile-val">CV</div>
+        <div class="about-tile-label">Computer Vision</div>
+      </div>
+      <div class="about-tile">
+        <div class="about-tile-icon">💬</div>
+        <div class="about-tile-val">NLP</div>
+        <div class="about-tile-label">Natural Language</div>
+      </div>
+      <div class="about-tile">
+        <div class="about-tile-icon">⚡</div>
+        <div class="about-tile-val">Real-Time</div>
+        <div class="about-tile-label">Instant Results</div>
+      </div>
+      <div class="about-tile">
+        <div class="about-tile-icon">📱</div>
+        <div class="about-tile-val">Zero</div>
+        <div class="about-tile-label">Hardware Needed</div>
+      </div>
+    </div>
+    <div>
+      <div class="section-tag">🥬 The Problem</div>
+      <h2 class="section-heading">Households waste millions of tons of <em>perfectly preventable</em> food every year</h2>
+      <p class="section-sub">
+        Most vegetable spoilage isn't sudden — it's gradual. By the time you notice mould or slime, the vegetable has been deteriorating for days. Traditional solutions rely on expensive IoT sensors or manual inspection. VeggieGuard changes that with pure software intelligence.
+      </p>
+      <div class="problem-callout">
+        <strong>⚠ Did you know?</strong>
+        The average household throws away 30–40% of the food it purchases. Vegetables account for the largest share — most discarded simply because spoilage wasn't noticed in time.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how" class="how-section">
+  <div class="section-inner">
+    <div class="how-header">
+      <div class="section-tag">⚙️ The Process</div>
+      <h2 class="section-heading">How <em>VeggieGuard</em> works</h2>
+      <p class="section-sub">A seamless four-step process combining computer vision and conversational AI to protect your produce.</p>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-icon">📸</div>
+        <div class="step-title">Capture or Upload</div>
+        <div class="step-desc">Take a photo of your vegetables using your phone camera or upload an existing image from your gallery.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-icon">🔍</div>
+        <div class="step-title">AI Vision Analysis</div>
+        <div class="step-desc">Our computer vision model analyses colour, texture, and surface patterns to detect early signs of spoilage.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-icon">💬</div>
+        <div class="step-title">Ask & Interact</div>
+        <div class="step-desc">Use natural language to ask questions — "Is my broccoli still good?" — and get plain-English answers instantly.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-icon">📋</div>
+        <div class="step-title">Act on Insights</div>
+        <div class="step-desc">Receive personalised recommendations: use tonight, store differently, or discard safely — with meal planning suggestions.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BENEFITS -->
+<section id="benefits">
+  <div class="section-inner benefits-grid">
+    <div>
+      <div class="section-tag">✅ Why It Matters</div>
+      <h2 class="section-heading">Real benefits for <em>real households</em></h2>
+      <p class="section-sub">VeggieGuard isn't just about detecting spoilage — it's about transforming how your household relates to food.</p>
+      <div class="benefits-list">
+        <div class="benefit-item">
+          <div class="benefit-icon-wrap">🕐</div>
+          <div>
+            <div class="benefit-title">Early Spoilage Detection</div>
+            <div class="benefit-desc">Catch deterioration days before it's visible to the naked eye. Act early, waste less.</div>
+          </div>
+        </div>
+        <div class="benefit-item">
+          <div class="benefit-icon-wrap">💰</div>
+          <div>
+            <div class="benefit-title">Significant Cost Savings</div>
+            <div class="benefit-desc">Households can save hundreds annually by reducing food thrown away each month.</div>
+          </div>
+        </div>
+        <div class="benefit-item">
+          <div class="benefit-icon-wrap">🗓️</div>
+          <div>
+            <div class="benefit-title">Smarter Meal Planning</div>
+            <div class="benefit-desc">Know exactly what needs to be used first. Plan meals around freshness, not guesswork.</div>
+          </div>
+        </div>
+        <div class="benefit-item">
+          <div class="benefit-icon-wrap">🌍</div>
+          <div>
+            <div class="benefit-title">Environmental Impact</div>
+            <div class="benefit-desc">Less food waste means fewer greenhouse gas emissions from landfill decomposition.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="benefits-visual">
+      <div class="bv-title">Estimated Monthly Household Savings</div>
+      <div class="savings-item">
+        <div class="savings-label"><span>Leafy Greens</span><span>68% less waste</span></div>
+        <div class="savings-bar"><div class="savings-fill" style="width:68%"></div></div>
+      </div>
+      <div class="savings-item">
+        <div class="savings-label"><span>Root Vegetables</span><span>54% less waste</span></div>
+        <div class="savings-bar"><div class="savings-fill" style="width:54%"></div></div>
+      </div>
+      <div class="savings-item">
+        <div class="savings-label"><span>Fruiting Veg</span><span>72% less waste</span></div>
+        <div class="savings-bar"><div class="savings-fill" style="width:72%"></div></div>
+      </div>
+      <div class="savings-item">
+        <div class="savings-label"><span>Herbs & Garnish</span><span>81% less waste</span></div>
+        <div class="savings-bar"><div class="savings-fill" style="width:81%"></div></div>
+      </div>
+      <div class="bv-total">
+        <div>
+          <div class="bv-total-label">Average annual saving per household</div>
+        </div>
+        <div class="bv-total-val">~$620</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MISSION -->
+<section id="mission" class="mission-section">
+  <div class="mission-inner">
+    <div class="mission-grid">
+      <div>
+        <div class="section-tag">🎯 Purpose</div>
+        <h2 class="section-heading">Our <em>Mission</em> & Vision</h2>
+        <p class="section-sub" style="color:rgba(255,255,255,.72)">
+          We exist to make intelligent food management accessible to every household on earth — without requiring a single piece of extra hardware.
+        </p>
+        <p class="section-sub" style="color:rgba(255,255,255,.65);margin-top:1rem">
+          Our vision is a world where food waste is considered as unacceptable as energy waste — and where AI quietly works in the background to make that standard effortless to achieve.
+        </p>
+      </div>
+      <div class="mission-cards">
+        <div class="mission-card">
+          <div class="mc-icon">🌱</div>
+          <div>
+            <div class="mc-title">Democratise Food Intelligence</div>
+            <div class="mc-desc">Make the kind of food quality monitoring previously only available to large supermarket chains accessible to every family, everywhere.</div>
+          </div>
+        </div>
+        <div class="mission-card">
+          <div class="mc-icon">♻️</div>
+          <div>
+            <div class="mc-title">Drive Sustainable Behaviour</div>
+            <div class="mc-desc">Use technology to nudge households toward sustainability — not through guilt, but through convenience and genuine insight.</div>
+          </div>
+        </div>
+        <div class="mission-card">
+          <div class="mc-icon">🤝</div>
+          <div>
+            <div class="mc-title">Build for Everyone</div>
+            <div class="mc-desc">A simple photo and a plain-English question is all it takes. No technical knowledge, no special equipment, no barriers.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHY CHOOSE US -->
+<section id="why" class="why-section">
+  <div class="section-inner">
+    <div class="why-header">
+      <div class="section-tag">⭐ Our Difference</div>
+      <h2 class="section-heading">Why choose <em>VeggieGuard</em>?</h2>
+      <p class="section-sub">We're not another smart fridge or sensor kit. We're a pure software solution that works with what you already have.</p>
+    </div>
+    <div class="why-grid">
+      <div class="why-card">
+        <div class="why-icon">📱</div>
+        <div class="why-title">No Hardware Required</div>
+        <div class="why-desc">Unlike IoT-based freshness systems that cost hundreds to set up, VeggieGuard runs entirely on your existing smartphone or computer. Zero extra investment.</div>
+        <div class="why-vs">✓ vs. Smart fridge sensors ($200–$800)</div>
+      </div>
+      <div class="why-card">
+        <div class="why-icon">⚡</div>
+        <div class="why-title">Instant, Real-Time Results</div>
+        <div class="why-desc">Results in seconds, not minutes. Our computer vision pipeline is optimised for mobile devices and delivers actionable insights the moment you scan.</div>
+        <div class="why-vs">✓ vs. Manual inspection (inaccurate)</div>
+      </div>
+      <div class="why-card">
+        <div class="why-icon">💬</div>
+        <div class="why-title">Conversational Interface</div>
+        <div class="why-desc">Don't just get a score — have a conversation. Ask "what can I cook with what's about to expire?" and get a real, contextual answer from our NLP engine.</div>
+        <div class="why-vs">✓ vs. Static freshness labels</div>
+      </div>
+      <div class="why-card">
+        <div class="why-icon">🧠</div>
+        <div class="why-title">Learns Your Habits</div>
+        <div class="why-desc">VeggieGuard adapts to your household's eating patterns over time, providing increasingly personalised freshness recommendations and shopping advice.</div>
+        <div class="why-vs">✓ vs. Generic date stamping</div>
+      </div>
+      <div class="why-card">
+        <div class="why-icon">🔒</div>
+        <div class="why-title">Privacy by Design</div>
+        <div class="why-desc">Your food photos are processed locally where possible. We don't build profiles, sell data, or require account creation to use core features.</div>
+        <div class="why-vs">✓ vs. Cloud-dependent IoT devices</div>
+      </div>
+      <div class="why-card">
+        <div class="why-icon">🌐</div>
+        <div class="why-title">Works Anywhere</div>
+        <div class="why-desc">Whether you're in a city apartment or a rural farmhouse, VeggieGuard works on any device with a camera and a browser. No app store required.</div>
+        <div class="why-vs">✓ vs. Platform-locked hardware</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section id="cta" class="cta-section">
+  <div class="cta-inner">
+    <div style="font-size:3.5rem;margin-bottom:1rem">🥦</div>
+    <h2>Ready to guard your vegetables?</h2>
+    <p>Join thousands of households already reducing food waste with AI-powered freshness detection. It takes less than 30 seconds to get your first scan.</p>
+    <div class="cta-btns">
+      <a href="/login/" class="btn-sage">🚀 Start Free Scan</a>
+      <a href="/login/" class="btn-outline-sage">📖 Learn More</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p>© 2026 <strong>VeggieGuard</strong> — AI-Powered Freshness Detection · Built to reduce food waste, one vegetable at a time 🌿</p>
+</footer>
+
+<script>
+// Mobile nav toggle
+document.querySelector('.nav-toggle').addEventListener('click', () => {
+  const links = document.querySelector('.nav-links');
+  links.style.display = links.style.display === 'flex' ? 'none' : 'flex';
+  links.style.flexDirection = 'column';
+  links.style.position = 'absolute';
+  links.style.top = '60px'; links.style.left = '0'; links.style.right = '0';
+  links.style.background = 'rgba(250,253,248,.97)';
+  links.style.padding = '1rem 5%';
+  links.style.borderBottom = '1px solid var(--border)';
+  links.style.gap = '1rem';
+});
+
+// Scroll reveal
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.style.opacity = '1';
+      e.target.style.transform = 'translateY(0)';
+    }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.step, .why-card, .benefit-item, .mission-card, .about-tile').forEach(el => {
+  el.style.opacity = '0';
+  el.style.transform = 'translateY(20px)';
+  el.style.transition = 'opacity .6s ease, transform .6s ease';
+  observer.observe(el);
+});
+</script>
+</body>
+</html>

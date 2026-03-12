@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block title %}Monitor — GardenAI{% endblock %}
+{% block content %}
+<div class="page-header"><h1><i class="bi bi-activity"></i> Garden Monitor</h1></div>
+
+{% if poor_health %}
+<div class="alert-banner">
+  <i class="bi bi-exclamation-triangle-fill"></i>
+  <strong>{{ poor_health.count }} plant(s) need attention</strong>
+</div>
+{% endif %}
+
+<div class="monitor-grid">
+{% for veg in vegetables %}
+<div class="monitor-card health-{{ veg.health_status }}">
+  <div class="monitor-header">
+    <div>
+      <strong>{{ veg.name }}</strong>
+      {% if veg.variety %}<span class="text-muted"> · {{ veg.variety }}</span>{% endif %}
+    </div>
+    <span class="health-badge {{ veg.health_status }}">{{ veg.get_health_status_display }}</span>
+  </div>
+  {% if veg.photo %}
+  <img src="{{ veg.photo.url }}" alt="{{ veg.name }}" class="monitor-photo">
+  {% endif %}
+  <div class="monitor-meta">
+    <span><i class="bi bi-calendar3"></i> {{ veg.planted_date }}</span>
+    <span><i class="bi bi-box-seam"></i> Qty: {{ veg.quantity }}</span>
+    {% if veg.location %}<span><i class="bi bi-geo-alt"></i> {{ veg.location }}</span>{% endif %}
+  </div>
+  {% if veg.ai_analysis %}
+  <div class="ai-snippet">{{ veg.ai_analysis|truncatewords:30 }}</div>
+  {% endif %}
+  <a href="{% url 'vegetable_detail' veg.pk %}" class="btn-outline-green btn-sm">View Details</a>
+</div>
+{% empty %}
+<p class="text-muted">No vegetables to monitor. <a href="{% url 'add_vegetable' %}">Add some plants.</a></p>
+{% endfor %}
+</div>
+{% endblock %}

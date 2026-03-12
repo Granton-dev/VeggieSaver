@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard — GardenAI{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>My Garden</h1>
+  <a href="{% url 'add_vegetable' %}" class="btn-primary-green"><i class="bi bi-plus"></i> Add Vegetable</a>
+</div>
+
+<div class="stats-row">
+  <div class="stat-card"><div class="stat-num">{{ veg_count }}</div><div class="stat-label">Plants</div></div>
+  <div class="stat-card"><div class="stat-num text-success">{{ health_counts.excellent }}</div><div class="stat-label">Excellent</div></div>
+  <div class="stat-card"><div class="stat-num text-warning">{{ health_counts.fair }}</div><div class="stat-label">Fair</div></div>
+  <div class="stat-card"><div class="stat-num text-danger">{{ health_counts.poor }}</div><div class="stat-label">Poor</div></div>
+  <div class="stat-card"><div class="stat-num">{{ total_waste }}</div><div class="stat-label">Total Waste</div></div>
+</div>
+
+<!-- AI Tips -->
+<div class="section-card">
+  <div class="section-header">
+    <h2><i class="bi bi-lightbulb-fill text-warning"></i> Smart Tips</h2>
+    <button id="loadTips" class="btn-outline-green" onclick="loadTips()">
+      <i class="bi bi-arrow-clockwise"></i> Get AI Tips
+    </button>
+  </div>
+  <div id="tipsContainer" class="tips-grid">
+    <p class="text-muted">Click "Get AI Tips" for personalized advice based on your garden.</p>
+  </div>
+</div>
+
+<!-- Inventory -->
+<div class="section-card">
+  <h2>Inventory</h2>
+  <div class="veg-grid">
+    {% for veg in vegetables %}
+    <a href="{% url 'vegetable_detail' veg.pk %}" class="veg-card health-{{ veg.health_status }}">
+      {% if veg.photo %}
+        <img src="{{ veg.photo.url }}" alt="{{ veg.name }}" class="veg-photo">
+      {% else %}
+        <div class="veg-photo-placeholder">🥕</div>
+      {% endif %}
+      <div class="veg-info">
+        <strong>{{ veg.name }}</strong>
+        {% if veg.variety %}<small class="text-muted">{{ veg.variety }}</small>{% endif %}
+        <span class="health-badge {{ veg.health_status }}">{{ veg.get_health_status_display }}</span>
+        <small>Qty: {{ veg.quantity }} · Planted {{ veg.planted_date }}</small>
+      </div>
+    </a>
+    {% empty %}
+    <p class="text-muted">No vegetables yet. <a href="{% url 'add_vegetable' %}">Add your first plant!</a></p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function loadTips() {
+  const btn = document.getElementById('loadTips');
+  const container = document.getElementById('tipsContainer');
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Loading...';
+  btn.disabled = true;
+  try {
+    const resp = await fetch('/api/tips/');
+    const data = await resp.json();
+    if (data.success) {
+      const icons = {watering:'💧', pest:'🐛', nutrition:'🌿', harvest:'🌾', soil:'🪱'};
+      container.innerHTML = data.tips.map(t => `
+        <div class="tip-card">
+          <div class="tip-icon">${icons[t.category] || '💡'}</div>
+          <div><strong>${t.title}</strong><p>${t.tip}</p></div>
+        </div>`).join('');
+    } else {
+      container.innerHTML = `<p class="text-danger">Could not load tips: ${data.error}</p>`;
+    }
+  } catch(e) {
+    container.innerHTML = '<p class="text-danger">Error connecting to AI.</p>';
+  }
+  btn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Refresh Tips';
+  btn.disabled = false;
+}
+</script>
+{% endblock %}

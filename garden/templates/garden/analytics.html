@@ -1,0 +1,105 @@
+{% block content %}
+<div class="page-header"><h1>Analytics</h1></div>
+
+<div class="stats-row">
+  <div class="stat-card"><div class="stat-num">{{ total_vegetables }}</div><div class="stat-label">Total Plants</div></div>
+  <div class="stat-card"><div class="stat-num text-danger">{{ total_waste_30d }}</div><div class="stat-label">Waste (30 days)</div></div>
+</div>
+
+<div class="charts-grid">
+  <div class="section-card">
+    <h2>Waste Over Time (14 Days)</h2>
+    <canvas id="wasteTimeChart" height="250"></canvas>
+  </div>
+  <div class="section-card">
+    <h2>Waste by Reason (30 Days)</h2>
+    <canvas id="wasteReasonChart" height="250"></canvas>
+  </div>
+  <div class="section-card">
+    <h2>Plant Health Distribution</h2>
+    <canvas id="healthChart" height="250"></canvas>
+  </div>
+</div>
+
+<script>
+// Data injected from Django
+const wasteTime = JSON.parse(document.getElementById('waste-time-data').textContent);
+const wasteReason = JSON.parse(document.getElementById('waste-reason-data').textContent);
+const healthData = JSON.parse(document.getElementById('health-data').textContent);
+
+// Line chart - waste over time
+new Chart(document.getElementById('wasteTimeChart'), {
+  type: 'line',
+  data: {
+    labels: wasteTime.map(d => d.date),
+    datasets: [{
+      label: 'Waste', data: wasteTime.map(d => d.total),
+      borderColor: '#e74c3c', backgroundColor: 'rgba(231,76,60,0.1)',
+      tension: 0.4, fill: true
+    }]
+  },
+  options: { responsive: true, plugins: { legend: { display: false }}}
+});
+
+// Bar chart - waste by reason
+new Chart(document.getElementById('wasteReasonChart'), {
+  type: 'bar',
+  data: {
+    labels: wasteReason.map(d => d.reason),
+    datasets: [{ label: 'Qty', data: wasteReason.map(d => d.total),
+      backgroundColor: ['#e74c3c','#e67e22','#f1c40f','#3498db','#9b59b6','#1abc9c']
+    }]
+  },
+  options: { responsive: true, plugins: { legend: { display: false }}}
+});
+
+// Doughnut chart - health
+new Chart(document.getElementById('healthChart'), {
+  type: 'doughnut',
+  data: {
+    labels: healthData.map(d => d.status),
+    datasets: [{ data: healthData.map(d => d.count),
+      backgroundColor: ['#27ae60','#2ecc71','#f39c12','#e74c3c']
+    }]
+  },
+  options: { responsive: true }
+});
+</script>
+// Line chart - waste over time
+new Chart(document.getElementById('wasteTimeChart'), {
+  type: 'line',
+  data: {
+    labels: wasteTime.map(d => d.date),
+    datasets: [{
+      label: 'Waste', data: wasteTime.map(d => d.total),
+      borderColor: '#e74c3c', backgroundColor: 'rgba(231,76,60,0.1)',
+      tension: 0.4, fill: true
+    }]
+  },
+  options: { responsive: true, plugins: { legend: { display: false }}}
+});
+
+// Bar chart - waste by reason
+new Chart(document.getElementById('wasteReasonChart'), {
+  type: 'bar',
+  data: {
+    labels: wasteReason.map(d => d.reason),
+    datasets: [{ label: 'Qty', data: wasteReason.map(d => d.total),
+      backgroundColor: ['#e74c3c','#e67e22','#f1c40f','#3498db','#9b59b6','#1abc9c']
+    }]
+  },
+  options: { responsive: true, plugins: { legend: { display: false }}}
+});
+
+// Doughnut chart - health
+new Chart(document.getElementById('healthChart'), {
+  type: 'doughnut',
+  data: {
+    labels: healthData.map(d => d.status),
+    datasets: [{ data: healthData.map(d => d.count),
+      backgroundColor: ['#27ae60','#2ecc71','#f39c12','#e74c3c']
+    }]
+  },
+  options: { responsive: true }
+});
+</script>

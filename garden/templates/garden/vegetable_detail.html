@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}{{ veg.name }} — GardenAI{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>{{ veg.name }} {% if veg.variety %}<small style="font-size:1.1rem;color:var(--text-muted)">{{ veg.variety }}</small>{% endif %}</h1>
+  <a href="{% url 'dashboard' %}" class="btn-outline-green"><i class="bi bi-arrow-left"></i> Back</a>
+</div>
+
+<div class="detail-grid">
+  <div>
+    {% if veg.photo %}
+    <img src="{{ veg.photo.url }}" alt="{{ veg.name }}" class="detail-photo">
+    {% endif %}
+    <div class="section-card mt-3">
+      <table style="width:100%;font-size:.875rem">
+        <tr><td style="color:var(--text-muted)">Health</td><td><span class="health-badge {{ veg.health_status }}">{{ veg.get_health_status_display }}</span></td></tr>
+        <tr><td style="color:var(--text-muted)">Planted</td><td>{{ veg.planted_date }}</td></tr>
+        <tr><td style="color:var(--text-muted)">Quantity</td><td>{{ veg.quantity }}</td></tr>
+        {% if veg.location %}<tr><td style="color:var(--text-muted)">Location</td><td>{{ veg.location }}</td></tr>{% endif %}
+      </table>
+      {% if veg.notes %}<p class="mt-2 text-muted" style="font-size:.875rem">{{ veg.notes }}</p>{% endif %}
+    </div>
+  </div>
+
+  <div>
+    <div class="section-card">
+      <div class="section-header">
+        <h2><i class="bi bi-robot text-success"></i> AI Analysis</h2>
+        {% if veg.photo %}
+        <form method="post" style="margin:0">
+          {% csrf_token %}
+          <button name="reanalyze" class="btn-outline-green"><i class="bi bi-arrow-clockwise"></i> Re-analyze</button>
+        </form>
+        {% endif %}
+      </div>
+      {% if veg.ai_analysis %}
+      <div class="ai-analysis-box">{{ veg.ai_analysis }}</div>
+      {% else %}
+      <p class="text-muted">No AI analysis available. {% if not veg.photo %}Upload a photo to enable analysis.{% else %}Click Re-analyze.{% endif %}</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

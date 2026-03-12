@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Add Vegetable — GardenAI</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+<style>
+:root {
+  --forest: #0d2b1a;
+  --deep: #1a3a2a;
+  --mid: #2d6a4f;
+  --light: #52b788;
+  --pale: #d8f3dc;
+  --cream: #f8fdf9;
+  --gold: #c9a84c;
+  --text: #0d2b1a;
+  --muted: #5a7a68;
+  --sidebar-w: 240px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Outfit', sans-serif; background: var(--cream); color: var(--text); display: flex; min-height: 100vh; }
+
+/* SIDEBAR */
+.sidebar {
+  width: var(--sidebar-w);
+  background: var(--forest);
+  min-height: 100vh;
+  position: fixed;
+  left: 0; top: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem 0;
+  z-index: 100;
+}
+.sidebar-brand { display: flex; align-items: center; gap: .75rem; padding: 0 1.5rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,.08); }
+.brand-icon { font-size: 1.75rem; }
+.brand-name { font-family: 'Playfair Display', serif; font-size: 1.4rem; color: #fff; }
+.sidebar-nav { list-style: none; padding: 1rem 0; flex: 1; }
+.sidebar-nav .nav-link { display: flex; align-items: center; gap: .75rem; padding: .65rem 1.5rem; color: rgba(255,255,255,.6); text-decoration: none; font-size: .875rem; font-weight: 500; border-left: 3px solid transparent; transition: all .2s; }
+.sidebar-nav .nav-link:hover, .sidebar-nav .nav-link.active { color: #fff; background: rgba(255,255,255,.07); border-left-color: var(--light); }
+.sidebar-footer { padding: 1rem 1.5rem; border-top: 1px solid rgba(255,255,255,.08); display: flex; align-items: center; justify-content: space-between; }
+.user-name { color: rgba(255,255,255,.7); font-size: .8rem; }
+.btn-logout { color: rgba(255,255,255,.5); text-decoration: none; font-size: 1.1rem; }
+.btn-logout:hover { color: #fff; }
+
+/* MAIN */
+.main-content { margin-left: var(--sidebar-w); flex: 1; padding: 2.5rem; }
+
+/* PAGE HEADER */
+.page-header { margin-bottom: 2.5rem; }
+.page-header .breadcrumb { font-size: .8rem; color: var(--muted); margin-bottom: .5rem; display: flex; align-items: center; gap: .4rem; }
+.page-header .breadcrumb a { color: var(--mid); text-decoration: none; }
+.page-header h1 { font-family: 'Playfair Display', serif; font-size: 2.4rem; color: var(--forest); }
+.page-header p { color: var(--muted); margin-top: .35rem; }
+
+/* CATALOG SECTION */
+.section-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.4rem;
+  color: var(--forest);
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}
+.section-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, var(--pale), transparent);
+  margin-left: .75rem;
+}
+
+/* VEGETABLE CATALOG */
+.veg-catalog { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 1rem; margin-bottom: 2.5rem; }
+
+.veg-catalog-item {
+  background: #fff;
+  border-radius: 16px;
+  padding: 1rem .75rem;
+  text-align: center;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all .25s cubic-bezier(.34,1.56,.64,1);
+  position: relative;
+  overflow: hidden;
+}
+.veg-catalog-item::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--pale);
+  opacity: 0;
+  transition: opacity .2s;
+}
+.veg-catalog-item:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(45,106,79,.15); border-color: var(--light); }
+.veg-catalog-item:hover::before { opacity: .4; }
+.veg-catalog-item.selected { border-color: var(--mid); background: var(--pale); box-shadow: 0 8px 24px rgba(45,106,79,.2); transform: translateY(-2px); }
+.veg-catalog-item.selected::after { content: '✓'; position: absolute; top: .5rem; right: .5rem; background: var(--mid); color: #fff; width: 20px; height: 20px; border-radius: 50%; font-size: .7rem; display: flex; align-items: center; justify-content: center; }
+
+.veg-emoji { font-size: 2.8rem; display: block; margin-bottom: .5rem; position: relative; z-index: 1; }
+.veg-catalog-name { font-size: .8rem; font-weight: 600; color: var(--forest); position: relative; z-index: 1; }
+.veg-catalog-desc { font-size: .68rem; color: var(--muted); margin-top: .2rem; position: relative; z-index: 1; }
+
+/* SELECTED PREVIEW CARD */
+.selected-preview {
+  background: linear-gradient(135deg, var(--forest), var(--deep));
+  border-radius: 20px;
+  padding: 1.75rem;
+  color: #fff;
+  margin-bottom: 2rem;
+  display: none;
+  animation: slideIn .3s ease;
+}
+.selected-preview.show { display: flex; align-items: center; gap: 1.5rem; }
+@keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+.preview-emoji { font-size: 4rem; flex-shrink: 0; }
+.preview-info h3 { font-family: 'Playfair Display', serif; font-size: 1.5rem; margin-bottom: .25rem; }
+.preview-info p { opacity: .75; font-size: .875rem; line-height: 1.6; }
+.preview-tags { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .75rem; }
+.preview-tag { background: rgba(255,255,255,.15); border-radius: 20px; padding: .2rem .65rem; font-size: .72rem; font-weight: 500; }
+
+/* FORM LAYOUT */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+.form-full { grid-column: 1 / -1; }
+
+.form-group { display: flex; flex-direction: column; gap: .4rem; }
+.form-label-custom { font-size: .78rem; font-weight: 600; color: var(--forest); text-transform: uppercase; letter-spacing: .07em; }
+.form-control-custom {
+  border: 1.5px solid #c8ddd2;
+  border-radius: 10px;
+  padding: .65rem 1rem;
+  font-family: 'Outfit', sans-serif;
+  font-size: .9rem;
+  color: var(--text);
+  background: #fff;
+  transition: border .2s, box-shadow .2s;
+  width: 100%;
+}
+.form-control-custom:focus { outline: none; border-color: var(--mid); box-shadow: 0 0 0 3px rgba(45,106,79,.12); }
+select.form-control-custom { cursor: pointer; }
+textarea.form-control-custom { resize: vertical; min-height: 90px; }
+
+/* PHOTO UPLOAD */
+.photo-section { background: #fff; border-radius: 18px; padding: 1.75rem; border: 1px solid #e0ede6; }
+
+.photo-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: .75rem; margin-bottom: 1.25rem; }
+.photo-option-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .5rem;
+  padding: 1rem .75rem;
+  border-radius: 12px;
+  border: 1.5px solid #c8ddd2;
+  background: #fff;
+  cursor: pointer;
+  transition: all .2s;
+  font-family: 'Outfit', sans-serif;
+}
+.photo-option-btn:hover { border-color: var(--mid); background: var(--pale); transform: translateY(-2px); }
+.photo-option-btn.active { border-color: var(--mid); background: var(--pale); }
+.photo-option-btn i { font-size: 1.5rem; color: var(--mid); }
+.photo-option-btn span { font-size: .75rem; font-weight: 600; color: var(--forest); }
+.photo-option-btn small { font-size: .65rem; color: var(--muted); text-align: center; }
+
+/* DROP ZONE */
+.dropzone {
+  border: 2px dashed #a8cbb8;
+  border-radius: 14px;
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all .2s;
+  background: var(--cream);
+  display: none;
+}
+.dropzone.show { display: block; }
+.dropzone:hover, .dropzone.dragover { border-color: var(--mid); background: var(--pale); }
+.dropzone i { font-size: 2.5rem; color: var(--light); margin-bottom: .75rem; }
+.dropzone p { color: var(--muted); font-size: .875rem; }
+.dropzone strong { color: var(--mid); }
+
+/* URL INPUT */
+.url-input-area { display: none; }
+.url-input-area.show { display: block; }
+
+/* CAMERA */
+.camera-area { display: none; text-align: center; }
+.camera-area.show { display: block; }
+#cameraFeed { width: 100%; max-width: 400px; border-radius: 12px; margin: 0 auto; display: block; }
+.capture-btn { background: var(--mid); color: #fff; border: none; border-radius: 50%; width: 56px; height: 56px; font-size: 1.4rem; cursor: pointer; margin: 1rem auto; display: block; transition: background .2s, transform .1s; }
+.capture-btn:hover { background: var(--light); transform: scale(1.05); }
+
+/* PHOTO PREVIEW */
+.photo-preview-wrap { display: none; position: relative; }
+.photo-preview-wrap.show { display: block; }
+#photoPreview { width: 100%; max-height: 280px; object-fit: cover; border-radius: 12px; }
+.remove-photo { position: absolute; top: .5rem; right: .5rem; background: rgba(0,0,0,.6); color: #fff; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-size: .9rem; display: flex; align-items: center; justify-content: center; }
+
+/* SUBMIT */
+.submit-bar {
+  background: #fff;
+  border-radius: 16px;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid #e0ede6;
+  margin-top: 1.5rem;
+}
+.ai-notice { display: flex; align-items: center; gap: .75rem; }
+.ai-notice i { font-size: 1.4rem; color: var(--gold); }
+.ai-notice div strong { display: block; font-size: .875rem; color: var(--forest); }
+.ai-notice div small { color: var(--muted); font-size: .78rem; }
+
+.btn-add {
+  background: linear-gradient(135deg, var(--mid), var(--forest));
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: .85rem 2rem;
+  font-family: 'Outfit', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  transition: opacity .2s, transform .1s;
+}
+.btn-add:hover { opacity: .9; transform: translateY(-1px); }
+
+.form-card { background: #fff; border-radius: 18px; padding: 1.75rem; border: 1px solid #e0ede6; margin-bottom: 1.5rem; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-brand">
+    <span class="brand-icon">🌱</span>
+    <span class="brand-name">GardenAI</span>
+  </div>
+  <ul class="sidebar-nav">
+    <li><a href="{% url 'dashboard' %}" class="nav-link"><i class="bi bi-grid-fill"></i> Dashboard</a></li>
+    <li><a href="{% url 'add_vegetable' %}" class="nav-link active"><i class="bi bi-plus-circle-fill"></i> Add Vegetable</a></li>
+    <li><a href="{% url 'waste_log' %}" class="nav-link"><i class="bi bi-trash3-fill"></i> Waste Log</a></li>
+    <li><a href="{% url 'analytics' %}" class="nav-link"><i class="bi bi-bar-chart-fill"></i> Analytics</a></li>
+    <li><a href="{% url 'monitor' %}" class="nav-link"><i class="bi bi-activity"></i> Monitor</a></li>
+  </ul>
+  <div class="sidebar-footer">
+    <span class="user-name">{{ user.username }}</span>
+    <a href="{% url 'logout' %}" class="btn-logout"><i class="bi bi-box-arrow-left"></i></a>
+  </div>
+</nav>
+
+<main class="main-content">
+  <div class="page-header">
+    <div class="breadcrumb">
+      <a href="{% url 'dashboard' %}">Dashboard</a>
+      <i class="bi bi-chevron-right" style="font-size:.7rem"></i>
+      Add Vegetable
+    </div>
+    <h1>Plant Catalogue</h1>
+    <p>Choose a vegetable from the catalogue or enter custom details below</p>
+  </div>
+
+  <form method="post" enctype="multipart/form-data" id="vegForm">
+    {% csrf_token %}
+    <input type="hidden" name="name" id="hiddenName">
+
+    <!-- CATALOG -->
+    <p class="section-title"><i class="bi bi-grid-3x3-gap" style="color:var(--light)"></i> Select from Catalogue</p>
+    <div class="veg-catalog" id="vegCatalog">
+      <!-- populated by JS -->
+    </div>
+
+    <!-- SELECTED PREVIEW -->
+    <div class="selected-preview" id="selectedPreview">
+      <div class="preview-emoji" id="previewEmoji">🥕</div>
+      <div class="preview-info">
+        <h3 id="previewName">Carrot</h3>
+        <p id="previewDesc">Loading...</p>
+        <div class="preview-tags" id="previewTags"></div>
+      </div>
+    </div>
+
+    <!-- DETAILS FORM -->
+    <p class="section-title"><i class="bi bi-pencil-square" style="color:var(--light)"></i> Vegetable Details</p>
+    <div class="form-card">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label-custom">Vegetable Name *</label>
+          <input type="text" name="name" id="vegName" class="form-control-custom" placeholder="e.g. Tomato, Carrot..." required>
+        </div>
+        <div class="form-group">
+          <label class="form-label-custom">Variety</label>
+          <input type="text" name="variety" class="form-control-custom" placeholder="e.g. Cherry, Roma...">
+        </div>
+        <div class="form-group">
+          <label class="form-label-custom">Planted Date *</label>
+          <input type="date" name="planted_date" class="form-control-custom" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label-custom">Quantity</label>
+          <input type="number" name="quantity" class="form-control-custom" value="1" min="1">
+        </div>
+        <div class="form-group">
+          <label class="form-label-custom">Location / Bed</label>
+          <input type="text" name="location" class="form-control-custom" placeholder="e.g. Raised Bed A, Greenhouse...">
+        </div>
+        <div class="form-group">
+          <label class="form-label-custom">Health Status</label>
+          <select name="health_status" class="form-control-custom">
+            <option value="excellent">🟢 Excellent</option>
+            <option value="good" selected>🟡 Good</option>
+            <option value="fair">🟠 Fair</option>
+            <option value="poor">🔴 Poor</option>
+          </select>
+        </div>
+        <div class="form-group form-full">
+          <label class="form-label-custom">Notes</label>
+          <textarea name="notes" class="form-control-custom" placeholder="Any observations, care reminders..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- PHOTO UPLOAD -->
+    <p class="section-title"><i class="bi bi-camera" style="color:var(--light)"></i> Plant Photo</p>
+    <div class="photo-section">
+      <div class="photo-options">
+        <button type="button" class="photo-option-btn active" onclick="setPhotoMode('file')">
+          <i class="bi bi-folder2-open"></i>
+          <span>From Files</span>
+          <small>Upload from your device</small>
+        </button>
+        <button type="button" class="photo-option-btn" onclick="setPhotoMode('camera')">
+          <i class="bi bi-camera-fill"></i>
+          <span>Take Photo</span>
+          <small>Use your camera</small>
+        </button>
+        <button type="button" class="photo-option-btn" onclick="setPhotoMode('url')">
+          <i class="bi bi-globe2"></i>
+          <span>From Web URL</span>
+          <small>Paste image link</small>
+        </button>
+      </div>
+
+      <!-- File/Drop Zone -->
+      <div class="dropzone show" id="dropzone" onclick="document.getElementById('photoInput').click()"
+           ondragover="event.preventDefault();this.classList.add('dragover')"
+           ondragleave="this.classList.remove('dragover')"
+           ondrop="handleDrop(event)">
+        <i class="bi bi-cloud-arrow-up"></i>
+        <p><strong>Click to browse</strong> or drag & drop your photo here</p>
+        <p style="font-size:.78rem;margin-top:.35rem">Supports JPG, PNG, WEBP · Max 10MB</p>
+      </div>
+      <input type="file" id="photoInput" name="photo" accept="image/*" style="display:none" onchange="handleFileSelect(this)">
+
+      <!-- Camera -->
+      <div class="camera-area" id="cameraArea">
+        <video id="cameraFeed" autoplay playsinline></video>
+        <button type="button" class="capture-btn" onclick="capturePhoto()" title="Capture">
+          <i class="bi bi-circle-fill"></i>
+        </button>
+        <canvas id="captureCanvas" style="display:none"></canvas>
+      </div>
+
+      <!-- URL Input -->
+      <div class="url-input-area" id="urlArea">
+        <div class="form-group">
+          <label class="form-label-custom">Image URL</label>
+          <div style="display:flex;gap:.5rem">
+            <input type="url" id="imageUrlInput" class="form-control-custom" placeholder="https://example.com/image.jpg">
+            <button type="button" onclick="loadImageFromUrl()" style="background:var(--mid);color:#fff;border:none;border-radius:10px;padding:.65rem 1.25rem;font-family:'Outfit',sans-serif;font-weight:600;cursor:pointer;white-space:nowrap">
+              Load
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Preview -->
+      <div class="photo-preview-wrap" id="photoPreviewWrap">
+        <img id="photoPreview" src="" alt="Preview">
+        <button type="button" class="remove-photo" onclick="removePhoto()" title="Remove"><i class="bi bi-x"></i></button>
+      </div>
+
+      <p style="font-size:.78rem;color:var(--muted);margin-top:1rem">
+        <i class="bi bi-stars" style="color:#c9a84c"></i>
+        <strong>AI Tip:</strong> A clear, well-lit photo helps Claude accurately analyze your plant's health and detect issues.
+      </p>
+    </div>
+
+    <!-- SUBMIT BAR -->
+    <div class="submit-bar">
+      <div class="ai-notice">
+        <i class="bi bi-robot"></i>
+        <div>
+          <strong>AI Analysis Enabled</strong>
+          <small>Claude will analyze your photo and provide health insights</small>
+        </div>
+      </div>
+      <button type="submit" class="btn-add">
+        <i class="bi bi-plus-circle-fill"></i> Add to Garden
+      </button>
+    </div>
+  </form>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// Vegetable catalogue data
+const VEGETABLES = [
+  { name: 'Tomato',     emoji: '🍅', desc: 'Warm-season fruit, rich in lycopene. Loves full sun and regular watering.', tags: ['Full Sun', 'Water Often', 'Summer'] },
+  { name: 'Carrot',     emoji: '🥕', desc: 'Root vegetable high in beta-carotene. Needs deep, loose soil.', tags: ['Full Sun', 'Deep Soil', 'Spring/Fall'] },
+  { name: 'Lettuce',    emoji: '🥬', desc: 'Fast-growing leafy green. Prefers cool weather and partial shade.', tags: ['Partial Shade', 'Cool Season', 'Quick Grow'] },
+  { name: 'Broccoli',   emoji: '🥦', desc: 'Nutrient-dense brassica. Thrives in cool temperatures.', tags: ['Cool Season', 'Full Sun', 'Fertile Soil'] },
+  { name: 'Pepper',     emoji: '🫑', desc: 'Heat-loving plant with vibrant fruits. Needs warm soil.', tags: ['Full Sun', 'Warm Soil', 'Summer'] },
+  { name: 'Cucumber',   emoji: '🥒', desc: 'Fast-growing vine. Needs trellis support and consistent moisture.', tags: ['Full Sun', 'Trellis', 'Water Often'] },
+  { name: 'Corn',       emoji: '🌽', desc: 'Tall grass crop. Needs space, full sun and nitrogen-rich soil.', tags: ['Full Sun', 'Space Needed', 'Summer'] },
+  { name: 'Eggplant',   emoji: '🍆', desc: 'Warm-season crop with purple fruits. Loves heat and sunshine.', tags: ['Full Sun', 'Heat Lover', 'Summer'] },
+  { name: 'Pumpkin',    emoji: '🎃', desc: 'Sprawling vine with large fruits. Needs lots of space.', tags: ['Full Sun', 'Space Needed', 'Fall'] },
+  { name: 'Potato',     emoji: '🥔', desc: 'Underground tuber. Plant in hilled rows with well-drained soil.', tags: ['Full Sun', 'Well Drained', 'Spring'] },
+  { name: 'Onion',      emoji: '🧅', desc: 'Bulb vegetable. Needs full sun and well-drained fertile soil.', tags: ['Full Sun', 'Well Drained', 'Spring'] },
+  { name: 'Garlic',     emoji: '🧄', desc: 'Pungent bulb planted in autumn. Very low maintenance.', tags: ['Full Sun', 'Low Maintenance', 'Fall Plant'] },
+  { name: 'Spinach',    emoji: '🌿', desc: 'Nutritious leafy green. Bolt-resistant in cool weather.', tags: ['Partial Shade', 'Cool Season', 'Quick Grow'] },
+  { name: 'Pea',        emoji: '🫛', desc: 'Climbing legume. Fixes nitrogen in soil naturally.', tags: ['Full Sun', 'Nitrogen Fix', 'Spring'] },
+  { name: 'Zucchini',   emoji: '🥒', desc: 'Prolific summer squash. Very easy to grow, high yield.', tags: ['Full Sun', 'High Yield', 'Summer'] },
+  { name: 'Kale',       emoji: '🥬', desc: 'Cold-hardy superfood green. Improves after frost.', tags: ['Full Sun', 'Cold Hardy', 'Year Round'] },
+  { name: 'Beetroot',   emoji: '🟣', desc: 'Dual-purpose: eat both roots and leaves. Tolerates shade.', tags: ['Partial Shade', 'Dual Use', 'Spring/Fall'] },
+  { name: 'Radish',     emoji: '🌸', desc: 'Fastest growing vegetable — ready in 3-4 weeks!', tags: ['Full Sun', 'Super Fast', 'All Season'] },
+  { name: 'Cauliflower',emoji: '🥦', desc: 'Delicate brassica needing consistent cool temperatures.', tags: ['Cool Season', 'Full Sun', 'Rich Soil'] },
+  { name: 'Cabbage',    emoji: '🥬', desc: 'Dense leafy head. Resistant to cold and light frost.', tags: ['Full Sun', 'Cold Hardy', 'Spring/Fall'] },
+];
+
+// Render catalog
+const catalog = document.getElementById('vegCatalog');
+VEGETABLES.forEach((v, i) => {
+  const el = document.createElement('div');
+  el.className = 'veg-catalog-item';
+  el.style.animationDelay = `${i * 0.03}s`;
+  el.innerHTML = `
+    <span class="veg-emoji">${v.emoji}</span>
+    <div class="veg-catalog-name">${v.name}</div>
+    <div class="veg-catalog-desc">${v.tags[0]}</div>
+  `;
+  el.onclick = () => selectVegetable(v, el);
+  catalog.appendChild(el);
+});
+
+function selectVegetable(v, el) {
+  document.querySelectorAll('.veg-catalog-item').forEach(i => i.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('vegName').value = v.name;
+  document.getElementById('previewEmoji').textContent = v.emoji;
+  document.getElementById('previewName').textContent = v.name;
+  document.getElementById('previewDesc').textContent = v.desc;
+  document.getElementById('previewTags').innerHTML = v.tags.map(t => `<span class="preview-tag">${t}</span>`).join('');
+  const preview = document.getElementById('selectedPreview');
+  preview.classList.add('show');
+  preview.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// Photo modes
+let cameraStream = null;
+
+function setPhotoMode(mode) {
+  document.querySelectorAll('.photo-option-btn').forEach(b => b.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+
+  document.getElementById('dropzone').classList.remove('show');
+  document.getElementById('cameraArea').classList.remove('show');
+  document.getElementById('urlArea').classList.remove('show');
+
+  if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
+
+  if (mode === 'file') document.getElementById('dropzone').classList.add('show');
+  if (mode === 'url')  document.getElementById('urlArea').classList.add('show');
+  if (mode === 'camera') {
+    document.getElementById('cameraArea').classList.add('show');
+    startCamera();
+  }
+}
+
+async function startCamera() {
+  try {
+    cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+    document.getElementById('cameraFeed').srcObject = cameraStream;
+  } catch(e) {
+    alert('Camera access denied or unavailable.');
+    setPhotoMode('file');
+  }
+}
+
+function capturePhoto() {
+  const video = document.getElementById('cameraFeed');
+  const canvas = document.getElementById('captureCanvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  canvas.getContext('2d').drawImage(video, 0, 0);
+  canvas.toBlob(blob => {
+    const file = new File([blob], 'camera-capture.jpg', { type: 'image/jpeg' });
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    document.getElementById('photoInput').files = dt.files;
+    showPreview(URL.createObjectURL(blob));
+    if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); }
+    document.getElementById('cameraArea').classList.remove('show');
+  }, 'image/jpeg', 0.9);
+}
+
+function handleFileSelect(input) {
+  if (input.files && input.files[0]) {
+    showPreview(URL.createObjectURL(input.files[0]));
+  }
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('dropzone').classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith('image/')) {
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    document.getElementById('photoInput').files = dt.files;
+    showPreview(URL.createObjectURL(file));
+  }
+}
+
+function loadImageFromUrl() {
+  const url = document.getElementById('imageUrlInput').value.trim();
+  if (!url) return;
+  showPreview(url);
+  // Note: URL images can't be submitted as file upload directly
+  // They will show preview only; for production use a fetch+blob approach
+}
+
+function showPreview(src) {
+  document.getElementById('photoPreview').src = src;
+  document.getElementById('photoPreviewWrap').classList.add('show');
+  document.getElementById('dropzone').classList.remove('show');
+  document.getElementById('urlArea').classList.remove('show');
+}
+
+function removePhoto() {
+  document.getElementById('photoInput').value = '';
+  document.getElementById('photoPreviewWrap').classList.remove('show');
+  document.getElementById('dropzone').classList.add('show');
+}
+
+// Set today as default date
+document.querySelector('input[name="planted_date"]').valueAsDate = new Date();
+</script>
+</body>
+</html>
