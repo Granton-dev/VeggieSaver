@@ -3,144 +3,166 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Login — GardenAI</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<title>Login — VeggieGuard</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 <style>
-  :root {
-    --green-dark: #1a3a2a;
-    --green-mid: #2d6a4f;
-    --green-light: #40916c;
-    --green-pale: #d8f3dc;
-    --accent: #52b788;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: 'DM Sans', sans-serif;
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--green-dark);
-    background-image: radial-gradient(ellipse at 20% 50%, rgba(64,145,108,0.3) 0%, transparent 60%),
-                      radial-gradient(ellipse at 80% 20%, rgba(82,183,136,0.2) 0%, transparent 50%);
-  }
-  .auth-card {
-    background: #fff;
-    border-radius: 20px;
-    padding: 2.75rem;
-    width: 100%;
-    max-width: 420px;
-    box-shadow: 0 25px 60px rgba(0,0,0,0.3);
-  }
-  .brand {
-    display: flex;
-    align-items: center;
-    gap: .75rem;
-    margin-bottom: 1.75rem;
-  }
-  .brand-icon { font-size: 2.2rem; }
-  .brand-name {
-    font-family: 'DM Serif Display', serif;
-    font-size: 2rem;
-    color: var(--green-dark);
-    line-height: 1;
-  }
-  .brand-sub { font-size: .8rem; color: #6b8c7a; margin-top: .15rem; }
-  h2 { font-family: 'DM Serif Display', serif; font-size: 1.5rem; color: var(--green-dark); margin-bottom: .25rem; }
-  .subtitle { color: #6b8c7a; font-size: .875rem; margin-bottom: 1.75rem; }
-  .form-label { font-weight: 600; font-size: .825rem; color: var(--green-dark); text-transform: uppercase; letter-spacing: .05em; margin-bottom: .4rem; }
-  .form-control {
-    border: 1.5px solid #d1e0d8;
-    border-radius: 10px;
-    padding: .65rem 1rem;
-    font-size: .9rem;
-    transition: border .2s, box-shadow .2s;
-  }
-  .form-control:focus {
-    border-color: var(--green-mid);
-    box-shadow: 0 0 0 3px rgba(45,106,79,.15);
-    outline: none;
-  }
-  .btn-login {
-    width: 100%;
-    background: var(--green-mid);
-    color: #fff;
-    border: none;
-    border-radius: 10px;
-    padding: .75rem;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background .2s, transform .1s;
-    margin-top: .5rem;
-  }
-  .btn-login:hover { background: var(--green-light); transform: translateY(-1px); }
-  .btn-login:active { transform: translateY(0); }
-  .divider { text-align: center; color: #aac4b5; font-size: .8rem; margin: 1.25rem 0; }
-  .register-link { text-align: center; font-size: .875rem; color: #6b8c7a; }
-  .register-link a { color: var(--green-mid); font-weight: 600; text-decoration: none; }
-  .register-link a:hover { text-decoration: underline; }
-  .alert-error {
-    background: #fadbd8;
-    border: 1px solid #e74c3c;
-    border-radius: 8px;
-    padding: .65rem 1rem;
-    color: #922b21;
-    font-size: .875rem;
-    margin-bottom: 1rem;
-  }
-  .leaf-decoration {
-    position: fixed;
-    font-size: 8rem;
-    opacity: .04;
-    pointer-events: none;
-  }
-  .leaf-1 { top: -2rem; left: -2rem; transform: rotate(-20deg); }
-  .leaf-2 { bottom: -2rem; right: -2rem; transform: rotate(160deg); }
+:root{--forest:#0d2b1a;--mid:#2d6a4f;--light:#52b788;--pale:#d8f3dc;--cream:#f8fdf9;--muted:#5a7a68}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Outfit',sans-serif;min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
+
+/* LEFT PANEL */
+.left-panel{background:linear-gradient(160deg,var(--forest) 0%,#1e4d30 50%,#2d6b45 100%);display:flex;flex-direction:column;justify-content:space-between;padding:3rem;position:relative;overflow:hidden}
+.left-panel::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 50% at 80% 40%,rgba(82,183,136,.15) 0%,transparent 70%)}
+.panel-brand{display:flex;align-items:center;gap:.75rem;position:relative;z-index:1}
+.panel-logo{width:44px;height:44px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.4rem}
+.panel-name{font-family:'Playfair Display',serif;font-size:1.5rem;color:#fff}
+.panel-hero{position:relative;z-index:1}
+.panel-hero h1{font-family:'Playfair Display',serif;font-size:clamp(2rem,3.5vw,3rem);color:#fff;line-height:1.15;margin-bottom:1rem}
+.panel-hero h1 em{color:#74c69d;font-style:italic}
+.panel-hero p{color:rgba(255,255,255,.65);font-size:1rem;line-height:1.8;max-width:400px}
+.panel-features{position:relative;z-index:1;display:flex;flex-direction:column;gap:.75rem}
+.feature-item{display:flex;align-items:center;gap:.75rem;color:rgba(255,255,255,.75);font-size:.875rem}
+.feature-icon{width:34px;height:34px;background:rgba(255,255,255,.08);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0}
+.panel-deco{position:absolute;font-size:20rem;opacity:.03;bottom:-4rem;right:-4rem;line-height:1;pointer-events:none}
+
+/* RIGHT PANEL */
+.right-panel{background:var(--cream);display:flex;align-items:center;justify-content:center;padding:2.5rem}
+.auth-box{width:100%;max-width:420px}
+.auth-header{margin-bottom:2rem}
+.auth-header h2{font-family:'Playfair Display',serif;font-size:2rem;color:var(--forest);margin-bottom:.35rem}
+.auth-header p{color:var(--muted);font-size:.9rem}
+
+.form-group{margin-bottom:1.25rem}
+.form-label{display:block;font-size:.75rem;font-weight:700;color:var(--forest);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.45rem}
+.input-wrap{position:relative}
+.input-icon{position:absolute;left:.9rem;top:50%;transform:translateY(-50%);color:var(--muted);font-size:1rem;pointer-events:none}
+.form-control{width:100%;border:1.5px solid #c8ddd2;border-radius:11px;padding:.7rem 1rem .7rem 2.5rem;font-family:'Outfit',sans-serif;font-size:.9rem;color:var(--forest);background:#fff;transition:border .2s,box-shadow .2s}
+.form-control:focus{outline:none;border-color:var(--mid);box-shadow:0 0 0 3px rgba(45,106,79,.1)}
+.toggle-pw{position:absolute;right:.9rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--muted);font-size:1rem;padding:0}
+.toggle-pw:hover{color:var(--mid)}
+
+.btn-login{width:100%;background:linear-gradient(135deg,var(--mid),var(--forest));color:#fff;border:none;border-radius:11px;padding:.85rem;font-family:'Outfit',sans-serif;font-size:1rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.5rem;margin-top:.5rem;transition:opacity .2s,transform .1s}
+.btn-login:hover{opacity:.9;transform:translateY(-1px)}
+.btn-login:active{transform:translateY(0)}
+
+.divider{display:flex;align-items:center;gap:.75rem;margin:1.5rem 0;color:#a8c5b5;font-size:.78rem}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:#ddeee5}
+
+.register-link{text-align:center;font-size:.875rem;color:var(--muted)}
+.register-link a{color:var(--mid);font-weight:700;text-decoration:none}
+.register-link a:hover{text-decoration:underline}
+
+.alert-error{background:#fadbd8;border:1px solid #e74c3c;border-radius:10px;padding:.7rem 1rem;color:#922b21;font-size:.875rem;margin-bottom:1.25rem;display:flex;align-items:center;gap:.5rem}
+.alert-success{background:#d5f5e3;border:1px solid #27ae60;border-radius:10px;padding:.7rem 1rem;color:#1a7a40;font-size:.875rem;margin-bottom:1.25rem;display:flex;align-items:center;gap:.5rem}
+
+@media(max-width:768px){body{grid-template-columns:1fr}.left-panel{display:none}.right-panel{padding:1.5rem}}
 </style>
 </head>
 <body>
-<div class="leaf-decoration leaf-1">🌿</div>
-<div class="leaf-decoration leaf-2">🌿</div>
 
-<div class="auth-card">
-  <div class="brand">
-    <span class="brand-icon">🌱</span>
-    <div>
-      <div class="brand-name">GardenAI</div>
-      <div class="brand-sub">Smart Vegetable Garden Manager</div>
+<!-- LEFT PANEL -->
+<div class="left-panel">
+  <div class="panel-brand">
+    <div class="panel-logo">🥦</div>
+    <span class="panel-name">VeggieGuard</span>
+  </div>
+
+  <div class="panel-hero">
+    <h1>Keep your vegetables <em>fresh</em> for longer</h1>
+    <p>AI-powered real-time freshness detection that helps your household reduce food waste and save money every week.</p>
+  </div>
+
+  <div class="panel-features">
+    <div class="feature-item">
+      <div class="feature-icon">🔍</div>
+      <span>Instant AI freshness analysis from any photo</span>
+    </div>
+    <div class="feature-item">
+      <div class="feature-icon">💬</div>
+      <span>Ask questions about your vegetables naturally</span>
+    </div>
+    <div class="feature-item">
+      <div class="feature-icon">📊</div>
+      <span>Track waste patterns and save up to $620/year</span>
+    </div>
+    <div class="feature-item">
+      <div class="feature-icon">📱</div>
+      <span>No hardware needed — just your phone camera</span>
     </div>
   </div>
 
-  <h2>Welcome back</h2>
-  <p class="subtitle">Sign in to your garden dashboard</p>
-
-  {% if messages %}
-    {% for msg in messages %}
-    <div class="alert-error">{{ msg }}</div>
-    {% endfor %}
-  {% endif %}
-
-  <form method="post">
-    {% csrf_token %}
-    <div class="mb-3">
-      <label class="form-label">Username</label>
-      <input type="text" name="username" class="form-control" placeholder="Your username" required autofocus>
-    </div>
-    <div class="mb-4">
-      <label class="form-label">Password</label>
-      <input type="password" name="password" class="form-control" placeholder="Your password" required>
-    </div>
-    <button type="submit" class="btn-login">Sign In →</button>
-  </form>
-
-  <div class="divider">— or —</div>
-  <p class="register-link">
-    Don't have an account? <a href="{% url 'register' %}">Create one free</a>
-  </p>
+  <div class="panel-deco">🥦</div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<!-- RIGHT PANEL -->
+<div class="right-panel">
+  <div class="auth-box">
+
+    <div class="auth-header">
+      <h2>Welcome back 👋</h2>
+      <p>Sign in to your VeggieGuard dashboard</p>
+    </div>
+
+    {% if messages %}
+      {% for msg in messages %}
+      <div class="{% if 'error' in msg.tags %}alert-error{% else %}alert-success{% endif %}">
+        <i class="bi bi-{% if 'error' in msg.tags %}exclamation-triangle{% else %}check-circle{% endif %}"></i>
+        {{ msg }}
+      </div>
+      {% endfor %}
+    {% endif %}
+
+    <form method="post">
+      {% csrf_token %}
+
+      <div class="form-group">
+        <label class="form-label">Username</label>
+        <div class="input-wrap">
+          <i class="bi bi-person input-icon"></i>
+          <input type="text" name="username" class="form-control"
+            placeholder="Enter your username" required autofocus>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <div class="input-wrap">
+          <i class="bi bi-lock input-icon"></i>
+          <input type="password" name="password" class="form-control"
+            placeholder="Enter your password" required id="passwordInput">
+          <button type="button" class="toggle-pw" onclick="togglePassword()">
+            <i class="bi bi-eye" id="eyeIcon"></i>
+          </button>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-login">
+        <i class="bi bi-box-arrow-in-right"></i> Sign In
+      </button>
+    </form>
+
+    <div class="divider">or</div>
+
+    <p class="register-link">
+      Don't have an account? <a href="{% url 'register' %}">Create one free →</a>
+    </p>
+
+  </div>
+</div>
+
+<script>
+function togglePassword() {
+  const input = document.getElementById('passwordInput');
+  const icon = document.getElementById('eyeIcon');
+  if (input.type === 'password') {
+    input.type = 'text';
+    icon.className = 'bi bi-eye-slash';
+  } else {
+    input.type = 'password';
+    icon.className = 'bi bi-eye';
+  }
+}
+</script>
 </body>
 </html>

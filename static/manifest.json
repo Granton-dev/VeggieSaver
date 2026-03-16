@@ -1,0 +1,26 @@
+{
+  "name": "VeggieGuard",
+  "short_name": "VeggieGuard",
+  "description": "AI-powered vegetable freshness detection",
+  "start_url": "/dashboard/",
+  "display": "standalone",
+  "background_color": "#0d2b1a",
+  "theme_color": "#0d2b1a",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/static/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["food", "health", "utilities"],
+  "screenshots": []
+}

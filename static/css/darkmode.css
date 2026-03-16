@@ -1,0 +1,134 @@
+[data-theme="dark"] {
+  --forest: #a8d5b5;
+  --mid: #52b788;
+  --light: #74c69d;
+  --pale: #1a3a2a;
+  --cream: #0d1f15;
+  --muted: #8ab89a;
+  --text: #e8f5ec;
+  --border: #1e4d30;
+}
+
+[data-theme="dark"] body {
+  background: #0d1f15;
+  color: #e8f5ec;
+}
+
+[data-theme="dark"] .main-content {
+  background: #0d1f15;
+}
+
+[data-theme="dark"] .card,
+[data-theme="dark"] .result-card,
+[data-theme="dark"] .scan-card,
+[data-theme="dark"] .form-card,
+[data-theme="dark"] .history-card,
+[data-theme="dark"] .photo-section,
+[data-theme="dark"] .submit-bar,
+[data-theme="dark"] .scans-table-wrap,
+[data-theme="dark"] .filter-bar,
+[data-theme="dark"] .summary-card,
+[data-theme="dark"] .stat-card,
+[data-theme="dark"] .why-card,
+[data-theme="dark"] .step,
+[data-theme="dark"] .benefit-item {
+  background: #112a1c;
+  border-color: #1e4d30;
+}
+
+[data-theme="dark"] .form-control,
+[data-theme="dark"] .form-control-custom,
+[data-theme="dark"] .url-input,
+[data-theme="dark"] .filter-select {
+  background: #0d1f15;
+  border-color: #1e4d30;
+  color: #e8f5ec;
+}
+
+[data-theme="dark"] .form-control:focus,
+[data-theme="dark"] .form-control-custom:focus {
+  border-color: #52b788;
+  box-shadow: 0 0 0 3px rgba(82,183,136,.15);
+}
+
+[data-theme="dark"] .page-header h1,
+[data-theme="dark"] .section-heading,
+[data-theme="dark"] .result-veg-name,
+[data-theme="dark"] .veg-catalog-name,
+[data-theme="dark"] .result-card h3,
+[data-theme="dark"] .card-header h2,
+[data-theme="dark"] .history-header h2 {
+  color: #a8d5b5;
+}
+
+[data-theme="dark"] .veg-card {
+  background: #112a1c;
+  border-color: #1e4d30;
+}
+
+[data-theme="dark"] .veg-photo-placeholder {
+  background: #1a3a2a;
+}
+
+[data-theme="dark"] .scan-mini {
+  background: #112a1c;
+  border-color: #1e4d30;
+}
+
+[data-theme="dark"] .waste-table th {
+  background: #0d1f15;
+  color: #8ab89a;
+}
+
+[data-theme="dark"] .waste-table td {
+  border-color: #1e4d30;
+}
+
+[data-theme="dark"] .waste-table tr:hover td {
+  background: #1a3a2a;
+}
+
+[data-theme="dark"] .tip-card {
+  background: #1a3a2a;
+  border-color: #1e4d30;
+}
+
+[data-theme="dark"] .upload-zone,
+[data-theme="dark"] .dropzone {
+  background: #112a1c;
+  border-color: #1e4d30;
+}
+
+[data-theme="dark"] .upload-zone:hover,
+[data-theme="dark"] .dropzone:hover {
+  background: #1a3a2a;
+}
+
+[data-theme="dark"] .ai-badge {
+  background: #1a3a2a;
+}
+
+[data-theme="dark"] .result-hero {
+  background: linear-gradient(135deg, #071510, #0d2b1a);
+}
+
+[data-theme="dark"] .sidebar {
+  background: #071510;
+}
+
+[data-theme="dark"] select option {
+  background: #112a1c;
+  color: #e8f5ec;
+}
+
+[data-theme="dark"] .empty-state h3,
+[data-theme="dark"] .veg-name,
+[data-theme="dark"] .benefit-title,
+[data-theme="dark"] .why-title {
+  color: #a8d5b5;
+}
+
+[data-theme="dark"] .score-bar,
+[data-theme="dark"] .confidence-track {
+  background: #1a3a2a;
+}

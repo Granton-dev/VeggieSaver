@@ -6,13 +6,12 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Sum, Count, Avg
 from django.http import JsonResponse
-from django.views.decorators.http import require_POST
 from .models import Vegetable, WasteLog, GardenTip, ScanResult
 from .forms import RegisterForm, VegetableForm, WasteLogForm
 from .utils import analyze_vegetable_photo, get_smart_tips
 
 
-# ─── AUTH ───────────────────────────────────────────────────────────────────
+# ── AUTH ─────────────────────────────────────────────────────────────────────
 
 def about_veggieguard(request):
     return render(request, 'garden/about_veggieguard.html')
@@ -37,9 +36,13 @@ def register_view(request):
         return redirect('dashboard')
     form = RegisterForm(request.POST or None)
     if request.method == 'POST' and form.is_valid():
-        user = form.save()
+        user = form.save(commit=False)
+        user.first_name = request.POST.get('first_name', '')
+        user.last_name = request.POST.get('last_name', '')
+        user.email = request.POST.get('email', '')
+        user.save()
         login(request, user)
-        messages.success(request, f'Welcome to VeggieGuard, {user.username}!')
+        messages.success(request, f'Welcome to VeggieGuard, {user.first_name or user.username}!')
         return redirect('dashboard')
     return render(request, 'garden/register.html', {'form': form})
 
@@ -49,7 +52,7 @@ def logout_view(request):
     return redirect('about_veggieguard')
 
 
-# ─── DASHBOARD ───────────────────────────────────────────────────────────────
+# ── DASHBOARD ─────────────────────────────────────────────────────────────────
 
 @login_required
 def dashboard(request):
@@ -60,7 +63,6 @@ def dashboard(request):
         user=request.user
     ).aggregate(Sum('quantity_wasted'))['quantity_wasted__sum'] or 0
 
-    # Freshness alerts — items needing attention
     alerts = ScanResult.objects.filter(
         user=request.user,
         freshness_status__in=['caution', 'spoiling', 'spoiled']
@@ -71,7 +73,6 @@ def dashboard(request):
         for s in ['excellent', 'good', 'fair', 'poor']
     }
 
-    # Scan stats
     total_scans = ScanResult.objects.filter(user=request.user).count()
     avg_freshness = ScanResult.objects.filter(
         user=request.user
@@ -91,23 +92,16 @@ def dashboard(request):
     return render(request, 'garden/dashboard.html', context)
 
 
-# ─── SCAN ────────────────────────────────────────────────────────────────────
+# ── SCAN ──────────────────────────────────────────────────────────────────────
 
 @login_required
 def scan_vegetable(request):
-    """Main scan page — upload photo, get AI analysis."""
     if request.method == 'POST' and request.FILES.get('photo'):
         photo = request.FILES['photo']
-
-        # Save the scan record with photo first
         scan = ScanResult(user=request.user, photo=photo)
         scan.save()
-
         try:
-            # Run AI analysis
             result = analyze_vegetable_photo(scan.photo.path)
-
-            # Populate scan with results
             scan.identified_vegetable = result.get('identified_vegetable', 'Unknown')
             scan.confidence_score = float(result.get('confidence_score', 0))
             scan.freshness_status = result.get('freshness_status', 'unknown')
@@ -120,9 +114,7 @@ def scan_vegetable(request):
             scan.storage_tips = result.get('storage_tips', '')
             scan.raw_ai_response = result
             scan.save()
-
             return redirect('scan_result', pk=scan.pk)
-
         except Exception as e:
             scan.delete()
             messages.error(request, f'Analysis failed: {str(e)}. Please try again.')
@@ -134,10 +126,8 @@ def scan_vegetable(request):
 
 @login_required
 def scan_result(request, pk):
-    """Display detailed AI analysis result."""
     scan = get_object_or_404(ScanResult, pk=pk, user=request.user)
     raw = scan.raw_ai_response or {}
-
     context = {
         'scan': scan,
         'warning_signs': raw.get('warning_signs', []),
@@ -149,12 +139,10 @@ def scan_result(request, pk):
 
 @login_required
 def scan_history(request):
-    """All past scans for the user."""
     scans = ScanResult.objects.filter(user=request.user)
     freshness_filter = request.GET.get('freshness', '')
     if freshness_filter:
         scans = scans.filter(freshness_status=freshness_filter)
-
     context = {
         'scans': scans,
         'freshness_filter': freshness_filter,
@@ -163,7 +151,7 @@ def scan_history(request):
     return render(request, 'garden/scan_history.html', context)
 
 
-# ─── VEGETABLES ──────────────────────────────────────────────────────────────
+# ── VEGETABLES ────────────────────────────────────────────────────────────────
 
 @login_required
 def add_vegetable(request):
@@ -172,6 +160,12 @@ def add_vegetable(request):
         veg = form.save(commit=False)
         veg.user = request.user
         veg.save()
+        if not veg.photo:
+            catalogue_img = request.POST.get('catalogue_img', '')
+            if catalogue_img:
+                relative_path = catalogue_img.replace('/media/', '')
+                veg.photo = relative_path
+                veg.save()
 
         if veg.photo:
             try:
@@ -181,8 +175,6 @@ def add_vegetable(request):
                     result.get('freshness_status', 'good')
                 )
                 veg.save()
-
-                # Also create a ScanResult record
                 ScanResult.objects.create(
                     user=request.user,
                     vegetable=veg,
@@ -204,17 +196,21 @@ def add_vegetable(request):
                 messages.warning(request, f'Vegetable added but analysis failed: {e}')
         else:
             messages.success(request, f'{veg.name} added to your garden!')
-
         return redirect('dashboard')
-
     return render(request, 'garden/add_vegetable.html', {'form': form})
 
 
 @login_required
 def vegetable_detail(request, pk):
     veg = get_object_or_404(Vegetable, pk=pk, user=request.user)
-
     if request.method == 'POST' and 'reanalyze' in request.POST:
+        if not veg.photo:
+            catalogue_img = request.POST.get('catalogue_img', '')
+            if catalogue_img:
+                relative_path = catalogue_img.replace('/media/', '')
+                veg.photo = relative_path
+                veg.save()
+
         if veg.photo:
             try:
                 result = analyze_vegetable_photo(veg.photo.path)
@@ -227,12 +223,11 @@ def vegetable_detail(request, pk):
             except Exception as e:
                 messages.error(request, f'Analysis failed: {e}')
         return redirect('vegetable_detail', pk=pk)
-
     scans = ScanResult.objects.filter(vegetable=veg).order_by('-scanned_at')[:5]
     return render(request, 'garden/vegetable_detail.html', {'veg': veg, 'scans': scans})
 
 
-# ─── WASTE ───────────────────────────────────────────────────────────────────
+# ── WASTE ─────────────────────────────────────────────────────────────────────
 
 @login_required
 def waste_log(request):
@@ -243,12 +238,11 @@ def waste_log(request):
         log.save()
         messages.success(request, 'Waste logged.')
         return redirect('waste_log')
-
     logs = WasteLog.objects.filter(user=request.user)
     return render(request, 'garden/waste_log.html', {'form': form, 'logs': logs})
 
 
-# ─── ANALYTICS ───────────────────────────────────────────────────────────────
+# ── ANALYTICS ─────────────────────────────────────────────────────────────────
 
 @login_required
 def analytics(request):
@@ -275,14 +269,12 @@ def analytics(request):
         for s in ['excellent', 'good', 'fair', 'poor']
     ]
 
-    # Scan freshness distribution
     scan_freshness = (
         ScanResult.objects.filter(user=request.user)
         .values('freshness_status')
         .annotate(count=Count('id'))
     )
 
-    # Average freshness score over last 14 days
     freshness_trend = []
     for i in range(13, -1, -1):
         day = date.today() - timedelta(days=i)
@@ -305,7 +297,7 @@ def analytics(request):
     return render(request, 'garden/analytics.html', context)
 
 
-# ─── MONITOR ─────────────────────────────────────────────────────────────────
+# ── MONITOR ───────────────────────────────────────────────────────────────────
 
 @login_required
 def monitor(request):
@@ -316,7 +308,6 @@ def monitor(request):
         user=request.user,
         freshness_status__in=['caution', 'spoiling', 'spoiled']
     ).order_by('-scanned_at')[:10]
-
     context = {
         'vegetables': vegetables,
         'poor_health': poor_health,
@@ -326,7 +317,7 @@ def monitor(request):
     return render(request, 'garden/monitor.html', context)
 
 
-# ─── AJAX ────────────────────────────────────────────────────────────────────
+# ── AJAX ──────────────────────────────────────────────────────────────────────
 
 @login_required
 def get_tips_ajax(request):
@@ -340,7 +331,7 @@ def get_tips_ajax(request):
         return JsonResponse({'success': False, 'error': str(e)})
 
 
-# ─── HELPERS ─────────────────────────────────────────────────────────────────
+# ── HELPERS ───────────────────────────────────────────────────────────────────
 
 def _freshness_to_health(freshness_status):
     mapping = {

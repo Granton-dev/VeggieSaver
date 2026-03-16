@@ -1,105 +1,215 @@
-{% block content %}
-<div class="page-header"><h1>Analytics</h1></div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Analytics — VeggieGuard</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/darkmode.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root{--forest:#0d2b1a;--mid:#2d6a4f;--light:#52b788;--pale:#d8f3dc;--cream:#f8fdf9;--muted:#5a7a68;--sidebar-w:240px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Outfit',sans-serif;background:var(--cream);display:flex;min-height:100vh}
+.sidebar{width:var(--sidebar-w);background:var(--forest);min-height:100vh;position:fixed;left:0;top:0;display:flex;flex-direction:column;padding:1.5rem 0;z-index:100}
+.sidebar-brand{display:flex;align-items:center;gap:.75rem;padding:0 1.5rem 1.5rem;border-bottom:1px solid rgba(255,255,255,.08)}
+.brand-name{font-family:'Playfair Display',serif;font-size:1.4rem;color:#fff}
+.sidebar-nav{list-style:none;padding:1rem 0;flex:1}
+.sidebar-nav .nav-link{display:flex;align-items:center;gap:.75rem;padding:.65rem 1.5rem;color:rgba(255,255,255,.6);text-decoration:none;font-size:.875rem;font-weight:500;border-left:3px solid transparent;transition:all .2s}
+.sidebar-nav .nav-link:hover,.sidebar-nav .nav-link.active{color:#fff;background:rgba(255,255,255,.07);border-left-color:var(--light)}
+.sidebar-footer{padding:1rem 1.5rem;border-top:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:space-between}
+.user-name{color:rgba(255,255,255,.7);font-size:.8rem}
+.btn-logout{color:rgba(255,255,255,.5);text-decoration:none;font-size:1.1rem}
+.main-content{margin-left:var(--sidebar-w);flex:1;padding:2.5rem}
+.page-header{margin-bottom:2rem}
+.page-header h1{font-family:'Playfair Display',serif;font-size:2.2rem;color:var(--forest)}
+.page-header p{color:var(--muted);margin-top:.3rem}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;margin-bottom:2rem}
+.stat-card{background:#fff;border-radius:14px;padding:1.25rem;border:1px solid #e0ede6;text-align:center}
+.stat-num{font-family:'Playfair Display',serif;font-size:2.2rem;color:var(--forest);line-height:1}
+.stat-label{font-size:.75rem;color:var(--muted);margin-top:.3rem;text-transform:uppercase;letter-spacing:.05em}
+.charts-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1.5rem}
+.chart-card{background:#fff;border-radius:16px;padding:1.5rem;border:1px solid #e0ede6}
+.chart-card h2{font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--forest);margin-bottom:1.25rem}
+.chart-card.full{grid-column:1/-1}
+@media(max-width:768px){.charts-grid{grid-template-columns:1fr}.chart-card.full{grid-column:1}}
+</style>
+  <link rel="manifest" href="/static/manifest.json">
+  <meta name="theme-color" content="#0d2b1a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="VeggieGuard">
+  <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+</head>
+<body>
 
-<div class="stats-row">
-  <div class="stat-card"><div class="stat-num">{{ total_vegetables }}</div><div class="stat-label">Total Plants</div></div>
-  <div class="stat-card"><div class="stat-num text-danger">{{ total_waste_30d }}</div><div class="stat-label">Waste (30 days)</div></div>
-</div>
+<nav class="sidebar">
+  <div class="sidebar-brand">
+    <span style="font-size:1.75rem">🥦</span>
+    <span class="brand-name">VeggieGuard</span>
+  </div>
+  <ul class="sidebar-nav">
+    <li><a href="{% url 'dashboard' %}" class="nav-link"><i class="bi bi-grid-fill"></i> Dashboard</a></li>
+    <li><a href="{% url 'scan_vegetable' %}" class="nav-link"><i class="bi bi-camera-fill"></i> Scan</a></li>
+    <li><a href="{% url 'scan_history' %}" class="nav-link"><i class="bi bi-clock-history"></i> History</a></li>
+    <li><a href="{% url 'add_vegetable' %}" class="nav-link"><i class="bi bi-plus-circle-fill"></i> Add Vegetable</a></li>
+    <li><a href="{% url 'waste_log' %}" class="nav-link"><i class="bi bi-trash3-fill"></i> Waste Log</a></li>
+    <li><a href="{% url 'analytics' %}" class="nav-link active"><i class="bi bi-bar-chart-fill"></i> Analytics</a></li>
+    <li><a href="{% url 'monitor' %}" class="nav-link"><i class="bi bi-activity"></i> Monitor</a></li>
+  </ul>
+  <div class="sidebar-footer">
+    <span class="user-name">{{ user.username }}</span>
+    <button id="darkToggle" onclick="toggleDarkMode()" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.7);border-radius:8px;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.9rem" title="Toggle dark mode"><i class="bi bi-moon-fill"></i></button>
+    <a href="{% url 'logout' %}" class="btn-logout"><i class="bi bi-box-arrow-left"></i></a>
+  </div>
+</nav>
 
-<div class="charts-grid">
-  <div class="section-card">
-    <h2>Waste Over Time (14 Days)</h2>
-    <canvas id="wasteTimeChart" height="250"></canvas>
+<main class="main-content">
+  <div class="page-header">
+    <h1>📊 Analytics</h1>
+    <p>Track your vegetable health, waste patterns and freshness trends</p>
   </div>
-  <div class="section-card">
-    <h2>Waste by Reason (30 Days)</h2>
-    <canvas id="wasteReasonChart" height="250"></canvas>
+
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-num">{{ total_vegetables }}</div>
+      <div class="stat-label">Total Vegetables</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" style="color:#e74c3c">{{ total_waste_30d }}</div>
+      <div class="stat-label">Waste (30 days)</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" style="color:var(--mid)">{{ total_scans }}</div>
+      <div class="stat-label">Total Scans</div>
+    </div>
   </div>
-  <div class="section-card">
-    <h2>Plant Health Distribution</h2>
-    <canvas id="healthChart" height="250"></canvas>
+
+  <div class="charts-grid">
+
+    <div class="chart-card full">
+      <h2>📈 Waste Over Time (14 Days)</h2>
+      <canvas id="wasteTimeChart" height="80"></canvas>
+    </div>
+
+    <div class="chart-card">
+      <h2>🥬 Waste by Reason</h2>
+      <canvas id="wasteReasonChart"></canvas>
+    </div>
+
+    <div class="chart-card">
+      <h2>💚 Plant Health Distribution</h2>
+      <canvas id="healthChart"></canvas>
+    </div>
+
+    <div class="chart-card">
+      <h2>🔍 Scan Freshness Distribution</h2>
+      <canvas id="freshnessChart"></canvas>
+    </div>
+
+    <div class="chart-card">
+      <h2>📉 Freshness Trend (14 Days)</h2>
+      <canvas id="freshnessTrendChart"></canvas>
+    </div>
+
   </div>
-</div>
+</main>
 
 <script>
-// Data injected from Django
-const wasteTime = JSON.parse(document.getElementById('waste-time-data').textContent);
-const wasteReason = JSON.parse(document.getElementById('waste-reason-data').textContent);
-const healthData = JSON.parse(document.getElementById('health-data').textContent);
+const wasteOverTime = {{ waste_over_time_json|safe }};
+const wasteByReason = {{ waste_by_reason_json|safe }};
+const healthData = {{ health_data_json|safe }};
+const scanFreshness = {{ scan_freshness_json|safe }};
+const freshnessTrend = {{ freshness_trend_json|safe }};
 
-// Line chart - waste over time
+// Waste over time
 new Chart(document.getElementById('wasteTimeChart'), {
   type: 'line',
   data: {
-    labels: wasteTime.map(d => d.date),
+    labels: wasteOverTime.map(d => d.date),
     datasets: [{
-      label: 'Waste', data: wasteTime.map(d => d.total),
-      borderColor: '#e74c3c', backgroundColor: 'rgba(231,76,60,0.1)',
-      tension: 0.4, fill: true
+      label: 'Items Wasted',
+      data: wasteOverTime.map(d => d.total),
+      borderColor: '#e74c3c',
+      backgroundColor: 'rgba(231,76,60,.1)',
+      tension: 0.4,
+      fill: true
     }]
   },
-  options: { responsive: true, plugins: { legend: { display: false }}}
+  options: { responsive: true, plugins: { legend: { display: false } } }
 });
 
-// Bar chart - waste by reason
+// Waste by reason
 new Chart(document.getElementById('wasteReasonChart'), {
   type: 'bar',
   data: {
-    labels: wasteReason.map(d => d.reason),
-    datasets: [{ label: 'Qty', data: wasteReason.map(d => d.total),
-      backgroundColor: ['#e74c3c','#e67e22','#f1c40f','#3498db','#9b59b6','#1abc9c']
+    labels: wasteByReason.map(d => d.reason),
+    datasets: [{
+      label: 'Quantity',
+      data: wasteByReason.map(d => d.total),
+      backgroundColor: ['#e74c3c','#e67e22','#f39c12','#3498db','#9b59b6','#1abc9c']
     }]
   },
-  options: { responsive: true, plugins: { legend: { display: false }}}
+  options: { responsive: true, plugins: { legend: { display: false } } }
 });
 
-// Doughnut chart - health
+// Health distribution
 new Chart(document.getElementById('healthChart'), {
   type: 'doughnut',
   data: {
     labels: healthData.map(d => d.status),
-    datasets: [{ data: healthData.map(d => d.count),
+    datasets: [{
+      data: healthData.map(d => d.count),
       backgroundColor: ['#27ae60','#2ecc71','#f39c12','#e74c3c']
     }]
   },
   options: { responsive: true }
 });
-</script>
-// Line chart - waste over time
-new Chart(document.getElementById('wasteTimeChart'), {
-  type: 'line',
-  data: {
-    labels: wasteTime.map(d => d.date),
-    datasets: [{
-      label: 'Waste', data: wasteTime.map(d => d.total),
-      borderColor: '#e74c3c', backgroundColor: 'rgba(231,76,60,0.1)',
-      tension: 0.4, fill: true
-    }]
-  },
-  options: { responsive: true, plugins: { legend: { display: false }}}
-});
 
-// Bar chart - waste by reason
-new Chart(document.getElementById('wasteReasonChart'), {
-  type: 'bar',
-  data: {
-    labels: wasteReason.map(d => d.reason),
-    datasets: [{ label: 'Qty', data: wasteReason.map(d => d.total),
-      backgroundColor: ['#e74c3c','#e67e22','#f1c40f','#3498db','#9b59b6','#1abc9c']
-    }]
-  },
-  options: { responsive: true, plugins: { legend: { display: false }}}
-});
-
-// Doughnut chart - health
-new Chart(document.getElementById('healthChart'), {
+// Scan freshness distribution
+new Chart(document.getElementById('freshnessChart'), {
   type: 'doughnut',
   data: {
-    labels: healthData.map(d => d.status),
-    datasets: [{ data: healthData.map(d => d.count),
-      backgroundColor: ['#27ae60','#2ecc71','#f39c12','#e74c3c']
+    labels: scanFreshness.map(d => d.freshness_status),
+    datasets: [{
+      data: scanFreshness.map(d => d.count),
+      backgroundColor: ['#27ae60','#2ecc71','#f39c12','#e67e22','#e74c3c']
     }]
   },
   options: { responsive: true }
 });
+
+// Freshness trend
+new Chart(document.getElementById('freshnessTrendChart'), {
+  type: 'line',
+  data: {
+    labels: freshnessTrend.map(d => d.date),
+    datasets: [{
+      label: 'Avg Freshness Score',
+      data: freshnessTrend.map(d => d.avg),
+      borderColor: '#2d6a4f',
+      backgroundColor: 'rgba(45,106,79,.1)',
+      tension: 0.4,
+      fill: true,
+      spanGaps: true
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: { y: { min: 0, max: 100 } }
+  }
+});
 </script>
+<script src="/static/js/darkmode.js"></script>
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/static/sw.js")
+    .then(() => console.log("VeggieGuard SW registered"))
+    .catch(e => console.log("SW error:", e));
+}
+</script>
+</body>
+</html>

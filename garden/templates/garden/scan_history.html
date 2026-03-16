@@ -6,6 +6,7 @@
 <title>Scan History — VeggieGuard</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/darkmode.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 <style>
 :root { --forest:#0d2b1a;--mid:#2d6a4f;--light:#52b788;--pale:#d8f3dc;--cream:#f8fdf9;--muted:#5a7a68;--sidebar-w:240px; }
@@ -73,6 +74,12 @@ body{font-family:'Outfit',sans-serif;background:var(--cream);display:flex;min-he
 .summary-num{font-family:'Playfair Display',serif;font-size:2rem;color:var(--forest);line-height:1}
 .summary-label{font-size:.75rem;color:var(--muted);margin-top:.25rem;text-transform:uppercase;letter-spacing:.05em}
 </style>
+  <link rel="manifest" href="/static/manifest.json">
+  <meta name="theme-color" content="#0d2b1a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="VeggieGuard">
+  <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
 </head>
 <body>
 
@@ -92,6 +99,7 @@ body{font-family:'Outfit',sans-serif;background:var(--cream);display:flex;min-he
   </ul>
   <div class="sidebar-footer">
     <span class="user-name">{{ user.username }}</span>
+    <button id="darkToggle" onclick="toggleDarkMode()" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.7);border-radius:8px;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.9rem" title="Toggle dark mode"><i class="bi bi-moon-fill"></i></button>
     <a href="{% url 'logout' %}" class="btn-logout"><i class="bi bi-box-arrow-left"></i></a>
   </div>
 </nav>
@@ -209,5 +217,13 @@ body{font-family:'Outfit',sans-serif;background:var(--cream);display:flex;min-he
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/static/js/darkmode.js"></script>
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/static/sw.js")
+    .then(() => console.log("VeggieGuard SW registered"))
+    .catch(e => console.log("SW error:", e));
+}
+</script>
 </body>
 </html>

@@ -1,34 +1,301 @@
-{% extends 'base.html' %}
-{% load crispy_forms_tags %}
-{% block title %}Waste Log — GardenAI{% endblock %}
-{% block content %}
-<div class="page-header"><h1>Waste Log</h1></div>
-<div style="display:grid;grid-template-columns:350px 1fr;gap:1.5rem">
-  <div class="section-card">
-    <h2>Log Waste</h2>
-    <form method="post">
-      {% csrf_token %}
-      {{ form|crispy }}
-      <button type="submit" class="btn-primary-green mt-2">Log Waste</button>
-    </form>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Waste Log — VeggieGuard</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/darkmode.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+<style>
+:root{--forest:#0d2b1a;--mid:#2d6a4f;--light:#52b788;--pale:#d8f3dc;--cream:#f8fdf9;--muted:#5a7a68;--sidebar-w:240px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Outfit',sans-serif;background:var(--cream);display:flex;min-height:100vh}
+.sidebar{width:var(--sidebar-w);background:var(--forest);min-height:100vh;position:fixed;left:0;top:0;display:flex;flex-direction:column;padding:1.5rem 0;z-index:100}
+.sidebar-brand{display:flex;align-items:center;gap:.75rem;padding:0 1.5rem 1.5rem;border-bottom:1px solid rgba(255,255,255,.08)}
+.brand-name{font-family:'Playfair Display',serif;font-size:1.4rem;color:#fff}
+.sidebar-nav{list-style:none;padding:1rem 0;flex:1}
+.sidebar-nav .nav-link{display:flex;align-items:center;gap:.75rem;padding:.65rem 1.5rem;color:rgba(255,255,255,.6);text-decoration:none;font-size:.875rem;font-weight:500;border-left:3px solid transparent;transition:all .2s}
+.sidebar-nav .nav-link:hover,.sidebar-nav .nav-link.active{color:#fff;background:rgba(255,255,255,.07);border-left-color:var(--light)}
+.sidebar-footer{padding:1rem 1.5rem;border-top:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:space-between}
+.user-name{color:rgba(255,255,255,.7);font-size:.8rem}
+.btn-logout{color:rgba(255,255,255,.5);text-decoration:none;font-size:1.1rem}
+.main-content{margin-left:var(--sidebar-w);flex:1;padding:2.5rem}
+.page-header{margin-bottom:2rem}
+.page-header h1{font-family:'Playfair Display',serif;font-size:2.2rem;color:var(--forest)}
+.page-header p{color:var(--muted);margin-top:.3rem}
+
+.layout{display:grid;grid-template-columns:360px 1fr;gap:1.75rem;align-items:start}
+
+/* FORM CARD */
+.form-card{background:#fff;border-radius:20px;border:1px solid #e0ede6;overflow:hidden;position:sticky;top:2rem}
+.form-card-header{background:linear-gradient(135deg,var(--forest),#1e4d30);padding:1.5rem;color:#fff}
+.form-card-header h2{font-family:'Playfair Display',serif;font-size:1.3rem;margin-bottom:.25rem}
+.form-card-header p{font-size:.8rem;opacity:.7}
+.form-card-body{padding:1.5rem}
+
+.form-group{margin-bottom:1.1rem}
+.form-label{font-size:.8rem;font-weight:700;color:var(--forest);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.4rem;display:block}
+.form-control{width:100%;border:1.5px solid #c8ddd2;border-radius:10px;padding:.6rem .9rem;font-family:'Outfit',sans-serif;font-size:.875rem;color:var(--forest);background:#fff;transition:border .2s}
+.form-control:focus{outline:none;border-color:var(--mid);box-shadow:0 0 0 3px rgba(45,106,79,.08)}
+select.form-control{cursor:pointer}
+
+.submit-btn{width:100%;background:linear-gradient(135deg,var(--mid),var(--forest));color:#fff;border:none;border-radius:12px;padding:.9rem;font-family:'Outfit',sans-serif;font-size:1rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.5rem;margin-top:1.25rem;transition:opacity .2s,transform .1s}
+.submit-btn:hover{opacity:.9;transform:translateY(-1px)}
+
+/* HISTORY CARD */
+.history-card{background:#fff;border-radius:20px;border:1px solid #e0ede6;overflow:hidden}
+.history-header{padding:1.25rem 1.5rem;border-bottom:1px solid var(--pale);display:flex;align-items:center;justify-content:space-between}
+.history-header h2{font-family:'Playfair Display',serif;font-size:1.2rem;color:var(--forest)}
+.total-badge{background:var(--pale);color:var(--mid);border-radius:20px;padding:.25rem .85rem;font-size:.78rem;font-weight:700}
+
+.waste-table{width:100%;border-collapse:collapse}
+.waste-table th{padding:.75rem 1.25rem;text-align:left;border-bottom:2px solid var(--pale);color:var(--muted);font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;font-weight:600;background:#fafdf9}
+.waste-table td{padding:.85rem 1.25rem;border-bottom:1px solid var(--pale);font-size:.875rem;vertical-align:middle}
+.waste-table tr:last-child td{border-bottom:none}
+.waste-table tr:hover td{background:var(--cream)}
+
+.veg-name{font-weight:600;color:var(--forest)}
+.qty-badge{display:inline-flex;align-items:center;justify-content:center;background:var(--pale);color:var(--mid);border-radius:8px;padding:.2rem .65rem;font-weight:700;font-size:.85rem;min-width:36px}
+
+.reason-pill{display:inline-flex;align-items:center;gap:.3rem;padding:.25rem .75rem;border-radius:20px;font-size:.72rem;font-weight:700}
+.reason-disease{background:#fadbd8;color:#922b21}
+.reason-pest{background:#fde8d8;color:#784212}
+.reason-overripe{background:#fef9e7;color:#7d6608}
+.reason-weather{background:#d6eaf8;color:#1a5276}
+.reason-poor_growth{background:#e8daef;color:#6c3483}
+.reason-spoiled{background:#fadbd8;color:#922b21}
+.reason-other{background:#eaecee;color:#555}
+
+.empty-state{text-align:center;padding:3rem 2rem;color:var(--muted)}
+.empty-icon{font-size:3.5rem;margin-bottom:.75rem}
+.empty-state h3{font-family:'Playfair Display',serif;font-size:1.2rem;color:var(--forest);margin-bottom:.4rem}
+.empty-state p{font-size:.875rem}
+
+.msg-box{border-radius:10px;padding:.75rem 1.25rem;margin-bottom:1rem;font-size:.875rem;display:flex;align-items:center;gap:.5rem;animation:fadeIn .3s ease}
+.msg-success{background:#d5f5e3;border:1px solid #27ae60;color:#1a7a40}
+.msg-error{background:#fadbd8;border:1px solid #e74c3c;color:#922b21}
+.msg-dismiss{margin-left:auto;background:none;border:none;cursor:pointer;font-size:1rem;opacity:.6;color:inherit}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+
+.summary-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.75rem}
+.summary-card{background:#fff;border-radius:12px;padding:1rem 1.25rem;border:1px solid #e0ede6;text-align:center}
+.summary-num{font-family:'Playfair Display',serif;font-size:1.8rem;color:var(--forest);line-height:1}
+.summary-label{font-size:.72rem;color:var(--muted);margin-top:.2rem;text-transform:uppercase;letter-spacing:.04em}
+
+@media(max-width:900px){.layout{grid-template-columns:1fr}.form-card{position:static}.summary-strip{grid-template-columns:1fr 1fr}}
+</style>
+  <link rel="manifest" href="/static/manifest.json">
+  <meta name="theme-color" content="#0d2b1a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="VeggieGuard">
+  <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-brand">
+    <span style="font-size:1.75rem">🥦</span>
+    <span class="brand-name">VeggieGuard</span>
   </div>
-  <div class="section-card">
-    <h2>History</h2>
-    <table class="waste-table">
-      <thead><tr><th>Date</th><th>Plant</th><th>Qty</th><th>Reason</th></tr></thead>
-      <tbody>
-      {% for log in logs %}
-      <tr>
-        <td>{{ log.date }}</td>
-        <td>{{ log.vegetable_name }}</td>
-        <td>{{ log.quantity_wasted }}</td>
-        <td><span class="health-badge fair">{{ log.get_reason_display }}</span></td>
-      </tr>
-      {% empty %}
-      <tr><td colspan="4" class="text-muted text-center py-3">No waste logged yet.</td></tr>
-      {% endfor %}
-      </tbody>
-    </table>
+  <ul class="sidebar-nav">
+    <li><a href="{% url 'dashboard' %}" class="nav-link"><i class="bi bi-grid-fill"></i> Dashboard</a></li>
+    <li><a href="{% url 'scan_vegetable' %}" class="nav-link"><i class="bi bi-camera-fill"></i> Scan</a></li>
+    <li><a href="{% url 'scan_history' %}" class="nav-link"><i class="bi bi-clock-history"></i> History</a></li>
+    <li><a href="{% url 'add_vegetable' %}" class="nav-link"><i class="bi bi-plus-circle-fill"></i> Add Vegetable</a></li>
+    <li><a href="{% url 'waste_log' %}" class="nav-link active"><i class="bi bi-trash3-fill"></i> Waste Log</a></li>
+    <li><a href="{% url 'analytics' %}" class="nav-link"><i class="bi bi-bar-chart-fill"></i> Analytics</a></li>
+    <li><a href="{% url 'monitor' %}" class="nav-link"><i class="bi bi-activity"></i> Monitor</a></li>
+  </ul>
+  <div class="sidebar-footer">
+    <span class="user-name">{{ user.username }}</span>
+    <button id="darkToggle" onclick="toggleDarkMode()" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.7);border-radius:8px;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.9rem" title="Toggle dark mode"><i class="bi bi-moon-fill"></i></button>
+    <a href="{% url 'logout' %}" class="btn-logout"><i class="bi bi-box-arrow-left"></i></a>
   </div>
-</div>
-{% endblock %}
+</nav>
+
+<main class="main-content">
+
+  <div class="page-header">
+    <h1>🗑️ Waste Log</h1>
+    <p>Track discarded vegetables to understand and reduce your household food waste</p>
+  </div>
+
+  {% if messages %}
+    {% for msg in messages %}
+    <div class="msg-box {% if 'error' in msg.tags %}msg-error{% else %}msg-success{% endif %}">
+      <span>{% if 'error' in msg.tags %}⚠{% else %}✓{% endif %}</span>
+      {{ msg }}
+      <button class="msg-dismiss" onclick="this.parentElement.remove()">✕</button>
+    </div>
+    {% endfor %}
+  {% endif %}
+
+  <!-- SUMMARY STRIP -->
+  <div class="summary-strip">
+    <div class="summary-card">
+      <div class="summary-num">{{ logs|length }}</div>
+      <div class="summary-label">Total Entries</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-num" style="color:#e74c3c">
+        {% with total=0 %}
+          {{ logs|length }}
+        {% endwith %}
+      </div>
+      <div class="summary-label">Items This Month</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-num" style="color:var(--mid)">
+        <i class="bi bi-arrow-down-circle" style="font-size:1.4rem"></i>
+      </div>
+      <div class="summary-label">Log to Reduce Waste</div>
+    </div>
+  </div>
+
+  <div class="layout">
+
+    <!-- FORM -->
+    <div class="form-card">
+      <div class="form-card-header">
+        <h2>📝 Log Waste Entry</h2>
+        <p>Record what you had to discard and why</p>
+      </div>
+      <div class="form-card-body">
+        <form method="post" id="wasteForm">
+          {% csrf_token %}
+
+          <div class="form-group">
+            <label class="form-label">Vegetable Name</label>
+            <input type="text" name="vegetable_name" class="form-control"
+              placeholder="e.g. Spinach, Tomato..." required
+              value="{{ form.vegetable_name.value|default:'' }}">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Quantity Wasted</label>
+            <input type="number" name="quantity_wasted" class="form-control"
+              placeholder="Number of items" min="1" required
+              value="{{ form.quantity_wasted.value|default:'' }}">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Reason</label>
+            <select name="reason" class="form-control" required>
+              <option value="">— Select reason —</option>
+              <option value="disease" {% if form.reason.value == 'disease' %}selected{% endif %}>🦠 Disease</option>
+              <option value="pest" {% if form.reason.value == 'pest' %}selected{% endif %}>🐛 Pest Damage</option>
+              <option value="overripe" {% if form.reason.value == 'overripe' %}selected{% endif %}>🍂 Overripe</option>
+              <option value="weather" {% if form.reason.value == 'weather' %}selected{% endif %}>🌧️ Weather Damage</option>
+              <option value="poor_growth" {% if form.reason.value == 'poor_growth' %}selected{% endif %}>🌱 Poor Growth</option>
+              <option value="spoiled" {% if form.reason.value == 'spoiled' %}selected{% endif %}>❌ Spoiled</option>
+              <option value="other" {% if form.reason.value == 'other' %}selected{% endif %}>📌 Other</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Date</label>
+            <input type="date" name="date" class="form-control" required
+              value="{{ form.date.value|default:'' }}" id="dateInput">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Notes (optional)</label>
+            <textarea name="notes" class="form-control" rows="3"
+              placeholder="Any additional details...">{{ form.notes.value|default:'' }}</textarea>
+          </div>
+
+          <button type="submit" class="submit-btn">
+            <i class="bi bi-plus-circle-fill"></i> Log Waste Entry
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- HISTORY TABLE -->
+    <div class="history-card">
+      <div class="history-header">
+        <h2>📋 Waste History</h2>
+        <span class="total-badge">{{ logs|length }} entries</span>
+      </div>
+
+      {% if logs %}
+      <table class="waste-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Vegetable</th>
+            <th>Qty</th>
+            <th>Reason</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for log in logs %}
+          <tr>
+            <td style="color:var(--muted);font-size:.8rem">
+              <i class="bi bi-calendar3" style="margin-right:.3rem"></i>
+              {{ log.date|date:"M d, Y" }}
+            </td>
+            <td><span class="veg-name">{{ log.vegetable_name }}</span></td>
+            <td><span class="qty-badge">{{ log.quantity_wasted }}</span></td>
+            <td>
+              <span class="reason-pill reason-{{ log.reason }}">
+                {% if log.reason == 'disease' %}🦠
+                {% elif log.reason == 'pest' %}🐛
+                {% elif log.reason == 'overripe' %}🍂
+                {% elif log.reason == 'weather' %}🌧️
+                {% elif log.reason == 'poor_growth' %}🌱
+                {% elif log.reason == 'spoiled' %}❌
+                {% else %}📌{% endif %}
+                {{ log.get_reason_display }}
+              </span>
+            </td>
+            <td style="color:var(--muted);font-size:.8rem;max-width:200px">
+              {{ log.notes|default:"—"|truncatechars:50 }}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="empty-state">
+        <div class="empty-icon">🌿</div>
+        <h3>No waste logged yet</h3>
+        <p>Start tracking discarded vegetables to identify waste patterns and reduce food loss.</p>
+      </div>
+      {% endif %}
+    </div>
+
+  </div>
+</main>
+
+<script>
+// Set today's date as default
+document.addEventListener('DOMContentLoaded', () => {
+  const dateInput = document.getElementById('dateInput');
+  if (!dateInput.value) {
+    dateInput.value = new Date().toISOString().split('T')[0];
+  }
+  // Auto dismiss messages
+  document.querySelectorAll('.msg-box').forEach(el => {
+    setTimeout(() => {
+      el.style.opacity = '0';
+      el.style.transition = 'opacity .5s';
+      setTimeout(() => el.remove(), 500);
+    }, 5000);
+  });
+});
+</script>
+<script src="/static/js/darkmode.js"></script>
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/static/sw.js")
+    .then(() => console.log("VeggieGuard SW registered"))
+    .catch(e => console.log("SW error:", e));
+}
+</script>
+</body>
+</html>

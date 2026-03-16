@@ -1,82 +1,422 @@
-{% extends 'base.html' %}
-{% block title %}Dashboard — GardenAI{% endblock %}
-{% block content %}
-<div class="page-header">
-  <h1>My Garden</h1>
-  <a href="{% url 'add_vegetable' %}" class="btn-primary-green"><i class="bi bi-plus"></i> Add Vegetable</a>
-</div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — VeggieGuard</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/darkmode.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+<style>
+:root{--forest:#0d2b1a;--mid:#2d6a4f;--light:#52b788;--pale:#d8f3dc;--cream:#f8fdf9;--muted:#5a7a68;--gold:#c9a84c;--sidebar-w:240px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Outfit',sans-serif;background:var(--cream);display:flex;min-height:100vh}
+.sidebar{width:var(--sidebar-w);background:var(--forest);min-height:100vh;position:fixed;left:0;top:0;display:flex;flex-direction:column;padding:1.5rem 0;z-index:100}
+.sidebar-brand{display:flex;align-items:center;gap:.75rem;padding:0 1.5rem 1.5rem;border-bottom:1px solid rgba(255,255,255,.08)}
+.brand-name{font-family:'Playfair Display',serif;font-size:1.4rem;color:#fff}
+.sidebar-nav{list-style:none;padding:1rem 0;flex:1}
+.sidebar-nav .nav-link{display:flex;align-items:center;gap:.75rem;padding:.65rem 1.5rem;color:rgba(255,255,255,.6);text-decoration:none;font-size:.875rem;font-weight:500;border-left:3px solid transparent;transition:all .2s}
+.sidebar-nav .nav-link:hover,.sidebar-nav .nav-link.active{color:#fff;background:rgba(255,255,255,.07);border-left-color:var(--light)}
+.sidebar-footer{padding:1rem 1.5rem;border-top:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:space-between}
+.user-name{color:rgba(255,255,255,.7);font-size:.8rem}
+.btn-logout{color:rgba(255,255,255,.5);text-decoration:none;font-size:1.1rem}
+.btn-logout:hover{color:#fff}
+.main-content{margin-left:var(--sidebar-w);flex:1;padding:2.5rem}
 
-<div class="stats-row">
-  <div class="stat-card"><div class="stat-num">{{ veg_count }}</div><div class="stat-label">Plants</div></div>
-  <div class="stat-card"><div class="stat-num text-success">{{ health_counts.excellent }}</div><div class="stat-label">Excellent</div></div>
-  <div class="stat-card"><div class="stat-num text-warning">{{ health_counts.fair }}</div><div class="stat-label">Fair</div></div>
-  <div class="stat-card"><div class="stat-num text-danger">{{ health_counts.poor }}</div><div class="stat-label">Poor</div></div>
-  <div class="stat-card"><div class="stat-num">{{ total_waste }}</div><div class="stat-label">Total Waste</div></div>
-</div>
+/* HEADER */
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem}
+.page-header h1{font-family:'Playfair Display',serif;font-size:2.2rem;color:var(--forest)}
+.page-header p{color:var(--muted);margin-top:.2rem;font-size:.9rem}
+.btn-add{background:linear-gradient(135deg,var(--mid),var(--forest));color:#fff;border:none;border-radius:10px;padding:.65rem 1.25rem;font-family:'Outfit',sans-serif;font-size:.875rem;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:.5rem;transition:opacity .2s,transform .1s}
+.btn-add:hover{opacity:.9;transform:translateY(-1px);color:#fff}
 
-<!-- AI Tips -->
-<div class="section-card">
-  <div class="section-header">
-    <h2><i class="bi bi-lightbulb-fill text-warning"></i> Smart Tips</h2>
-    <button id="loadTips" class="btn-outline-green" onclick="loadTips()">
-      <i class="bi bi-arrow-clockwise"></i> Get AI Tips
-    </button>
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1rem;margin-bottom:2rem}
+.stat-card{background:#fff;border-radius:16px;padding:1.25rem 1.5rem;border:1px solid #e0ede6;display:flex;flex-direction:column;gap:.35rem;transition:box-shadow .2s}
+.stat-card:hover{box-shadow:0 4px 16px rgba(45,106,79,.1)}
+.stat-icon{font-size:1.5rem}
+.stat-num{font-family:'Playfair Display',serif;font-size:2rem;color:var(--forest);line-height:1}
+.stat-label{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+
+/* ALERTS */
+.alerts-section{margin-bottom:2rem}
+.alert-card{background:#fff;border-radius:14px;border:1px solid #fde8d8;border-left:4px solid #e67e22;padding:1rem 1.25rem;display:flex;align-items:center;gap:1rem;margin-bottom:.6rem}
+.alert-icon{font-size:1.4rem;flex-shrink:0}
+.alert-veg{font-weight:600;font-size:.9rem;color:var(--forest)}
+.alert-status{font-size:.78rem;color:#a04000}
+.alert-link{margin-left:auto;font-size:.78rem;color:var(--mid);text-decoration:none;font-weight:600;white-space:nowrap}
+.alert-link:hover{text-decoration:underline}
+
+/* GRID LAYOUT */
+.dashboard-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:2rem}
+.card{background:#fff;border-radius:18px;border:1px solid #e0ede6;overflow:hidden}
+.card-header{padding:1.25rem 1.5rem;border-bottom:1px solid var(--pale);display:flex;align-items:center;justify-content:space-between}
+.card-header h2{font-family:'Playfair Display',serif;font-size:1.15rem;color:var(--forest)}
+.card-body{padding:1.25rem 1.5rem}
+
+/* SCAN GRID */
+.scans-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem}
+.scan-mini{text-decoration:none;color:inherit;display:block;border-radius:10px;overflow:hidden;border:1px solid #e0ede6;transition:transform .2s,box-shadow .2s}
+.scan-mini:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.08)}
+.scan-mini img{width:100%;height:75px;object-fit:cover}
+.scan-mini-info{padding:.5rem .6rem}
+.scan-mini-name{font-size:.75rem;font-weight:600;color:var(--forest)}
+.scan-mini-status{font-size:.68rem;color:var(--muted);display:flex;align-items:center;gap:.25rem;margin-top:.1rem}
+.freshness-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.scan-empty{text-align:center;padding:2rem;color:var(--muted);font-size:.875rem}
+
+/* TIPS */
+.tips-grid{display:flex;flex-direction:column;gap:.75rem}
+.tip-card{display:flex;gap:.875rem;align-items:flex-start;padding:.875rem;background:var(--cream);border-radius:12px;border:1px solid var(--pale)}
+.tip-icon{font-size:1.5rem;flex-shrink:0}
+.tip-card strong{font-size:.875rem;color:var(--forest);display:block;margin-bottom:.2rem}
+.tip-card p{font-size:.8rem;color:var(--muted);line-height:1.6;margin:0}
+.btn-tips{background:var(--pale);color:var(--mid);border:1px solid var(--pale);border-radius:8px;padding:.35rem .85rem;font-family:'Outfit',sans-serif;font-size:.78rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:.35rem;transition:all .2s}
+.btn-tips:hover{background:var(--mid);color:#fff}
+
+/* VEGETABLE INVENTORY */
+.full-width{grid-column:1/-1}
+.veg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem}
+.veg-card{display:block;text-decoration:none;background:#fff;border-radius:14px;overflow:hidden;border:2px solid #e0ede6;transition:all .2s}
+.veg-card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(45,106,79,.12);border-color:var(--light)}
+.veg-card.health-excellent{border-left:4px solid #27ae60}
+.veg-card.health-good{border-left:4px solid #2ecc71}
+.veg-card.health-fair{border-left:4px solid #f39c12}
+.veg-card.health-poor{border-left:4px solid #e74c3c}
+.veg-photo{width:100%;height:120px;object-fit:cover}
+.veg-photo-placeholder{width:100%;height:120px;background:var(--pale);display:flex;align-items:center;justify-content:center;font-size:3rem}
+.veg-info{padding:.875rem}
+.veg-info strong{display:block;font-size:.9rem;color:var(--forest);font-weight:600}
+.veg-info small{font-size:.72rem;color:var(--muted)}
+.health-badge{display:inline-block;border-radius:20px;padding:.15rem .6rem;font-size:.68rem;font-weight:700;margin:.3rem 0;text-transform:capitalize}
+.health-badge.excellent{background:#d5f5e3;color:#1a7a40}
+.health-badge.good{background:#d5f5e3;color:#239b56}
+.health-badge.fair{background:#fdebd0;color:#a04000}
+.health-badge.poor{background:#fadbd8;color:#922b21}
+
+.empty-state{text-align:center;padding:2.5rem;color:var(--muted)}
+.empty-state .empty-icon{font-size:3rem;margin-bottom:.75rem}
+.empty-state h3{font-family:'Playfair Display',serif;font-size:1.2rem;color:var(--forest);margin-bottom:.4rem}
+.empty-state p{font-size:.875rem;margin-bottom:1rem}
+.btn-empty{background:var(--mid);color:#fff;padding:.6rem 1.25rem;border-radius:10px;text-decoration:none;font-weight:600;font-size:.875rem;display:inline-flex;align-items:center;gap:.4rem}
+.btn-empty:hover{background:var(--light);color:#fff}
+
+/* WASTE */
+.waste-list{display:flex;flex-direction:column;gap:.6rem}
+.waste-item{display:flex;align-items:center;justify-content:space-between;padding:.6rem .75rem;background:var(--cream);border-radius:8px;font-size:.825rem}
+.waste-item-name{font-weight:600;color:var(--forest)}
+.waste-item-detail{font-size:.72rem;color:var(--muted)}
+.waste-qty{background:#fadbd8;color:#922b21;border-radius:6px;padding:.15rem .5rem;font-size:.72rem;font-weight:700}
+
+.view-all{font-size:.78rem;color:var(--mid);text-decoration:none;font-weight:600}
+.view-all:hover{text-decoration:underline}
+
+@media(max-width:900px){.dashboard-grid{grid-template-columns:1fr}.scans-grid{grid-template-columns:repeat(2,1fr)}}
+</style>
+  <link rel="manifest" href="/static/manifest.json">
+  <meta name="theme-color" content="#0d2b1a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="VeggieGuard">
+  <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-brand">
+    <span style="font-size:1.75rem">🥦</span>
+    <span class="brand-name">VeggieGuard</span>
   </div>
-  <div id="tipsContainer" class="tips-grid">
-    <p class="text-muted">Click "Get AI Tips" for personalized advice based on your garden.</p>
+  <ul class="sidebar-nav">
+    <li><a href="{% url 'dashboard' %}" class="nav-link active"><i class="bi bi-grid-fill"></i> Dashboard</a></li>
+    <li><a href="{% url 'scan_vegetable' %}" class="nav-link"><i class="bi bi-camera-fill"></i> Scan</a></li>
+    <li><a href="{% url 'scan_history' %}" class="nav-link"><i class="bi bi-clock-history"></i> History</a></li>
+    <li><a href="{% url 'add_vegetable' %}" class="nav-link"><i class="bi bi-plus-circle-fill"></i> Add Vegetable</a></li>
+    <li><a href="{% url 'waste_log' %}" class="nav-link"><i class="bi bi-trash3-fill"></i> Waste Log</a></li>
+    <li><a href="{% url 'analytics' %}" class="nav-link"><i class="bi bi-bar-chart-fill"></i> Analytics</a></li>
+    <li><a href="{% url 'monitor' %}" class="nav-link"><i class="bi bi-activity"></i> Monitor</a></li>
+  </ul>
+  <div class="sidebar-footer">
+    <span class="user-name">{{ user.username }}</span>
+    <button id="darkToggle" onclick="toggleDarkMode()" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.7);border-radius:8px;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.9rem" title="Toggle dark mode"><i class="bi bi-moon-fill"></i></button>
+    <a href="{% url 'logout' %}" class="btn-logout"><i class="bi bi-box-arrow-left"></i></a>
   </div>
-</div>
+</nav>
 
-<!-- Inventory -->
-<div class="section-card">
-  <h2>Inventory</h2>
-  <div class="veg-grid">
-    {% for veg in vegetables %}
-    <a href="{% url 'vegetable_detail' veg.pk %}" class="veg-card health-{{ veg.health_status }}">
-      {% if veg.photo %}
-        <img src="{{ veg.photo.url }}" alt="{{ veg.name }}" class="veg-photo">
-      {% else %}
-        <div class="veg-photo-placeholder">🥕</div>
-      {% endif %}
-      <div class="veg-info">
-        <strong>{{ veg.name }}</strong>
-        {% if veg.variety %}<small class="text-muted">{{ veg.variety }}</small>{% endif %}
-        <span class="health-badge {{ veg.health_status }}">{{ veg.get_health_status_display }}</span>
-        <small>Qty: {{ veg.quantity }} · Planted {{ veg.planted_date }}</small>
-      </div>
+<main class="main-content">
+
+  <!-- HEADER -->
+  <div class="page-header">
+    <div>
+      <h1>Welcome back, {{ user.first_name|default:user.username }} 👋</h1>
+      <p>Here's what's happening with your vegetables today</p>
+    </div>
+    <a href="{% url 'scan_vegetable' %}" class="btn-add">
+      <i class="bi bi-camera-fill"></i> Scan Vegetable
     </a>
-    {% empty %}
-    <p class="text-muted">No vegetables yet. <a href="{% url 'add_vegetable' %}">Add your first plant!</a></p>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-icon">🥦</div>
+      <div class="stat-num">{{ veg_count }}</div>
+      <div class="stat-label">Total Vegetables</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">🔍</div>
+      <div class="stat-num">{{ total_scans }}</div>
+      <div class="stat-label">Total Scans</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">📊</div>
+      <div class="stat-num" style="color:var(--mid)">{{ avg_freshness }}%</div>
+      <div class="stat-label">Avg Freshness</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">✅</div>
+      <div class="stat-num" style="color:#27ae60">{{ health_counts.excellent }}</div>
+      <div class="stat-label">Excellent Health</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">⚠️</div>
+      <div class="stat-num" style="color:#f39c12">{{ health_counts.fair }}</div>
+      <div class="stat-label">Needs Attention</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">🗑️</div>
+      <div class="stat-num" style="color:#e74c3c">{{ total_waste }}</div>
+      <div class="stat-label">Total Waste</div>
+    </div>
+  </div>
+
+  <!-- ALERTS -->
+  {% if alerts %}
+  <div class="alerts-section">
+    <div style="font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--forest);margin-bottom:.75rem">
+      ⚠️ Freshness Alerts
+    </div>
+    {% for scan in alerts %}
+    <div class="alert-card">
+      <div class="alert-icon">
+        {% if scan.freshness_status == 'spoiled' %}🔴
+        {% elif scan.freshness_status == 'spoiling' %}🟠
+        {% else %}🟡{% endif %}
+      </div>
+      <div>
+        <div class="alert-veg">{{ scan.identified_vegetable }}</div>
+        <div class="alert-status">{{ scan.get_freshness_status_display }} — {{ scan.scanned_at|date:"M d" }}</div>
+      </div>
+      <a href="{% url 'scan_result' scan.pk %}" class="alert-link">View →</a>
+    </div>
     {% endfor %}
   </div>
-</div>
-{% endblock %}
+  {% endif %}
 
-{% block extra_js %}
+  <!-- MAIN GRID -->
+  <div class="dashboard-grid">
+
+    <!-- RECENT SCANS -->
+    <div class="card">
+      <div class="card-header">
+        <h2><i class="bi bi-camera-fill" style="color:var(--light);margin-right:.4rem"></i> Recent Scans</h2>
+        <a href="{% url 'scan_history' %}" class="view-all">View all →</a>
+      </div>
+      <div class="card-body">
+        {% if recent_scans %}
+        <div class="scans-grid">
+          {% for scan in recent_scans %}
+          <a href="{% url 'scan_result' scan.pk %}" class="scan-mini">
+            <img src="{{ scan.photo.url }}" alt="{{ scan.identified_vegetable }}">
+            <div class="scan-mini-info">
+              <div class="scan-mini-name">{{ scan.identified_vegetable }}</div>
+              <div class="scan-mini-status">
+                <span class="freshness-dot" style="background:{{ scan.freshness_color }}"></span>
+                {{ scan.get_freshness_status_display }}
+              </div>
+            </div>
+          </a>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="scan-empty">
+          <div style="font-size:2.5rem;margin-bottom:.5rem">📷</div>
+          <p>No scans yet.<br>
+          <a href="{% url 'scan_vegetable' %}" style="color:var(--mid);font-weight:600">Scan your first vegetable →</a></p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- AI TIPS -->
+    <div class="card">
+      <div class="card-header">
+        <h2><i class="bi bi-lightbulb-fill" style="color:var(--gold);margin-right:.4rem"></i> Smart Tips</h2>
+        <button class="btn-tips" onclick="loadTips()" id="tipsBtn">
+          <i class="bi bi-stars"></i> Get AI Tips
+        </button>
+      </div>
+      <div class="card-body">
+        <div id="tipsContainer">
+          <p style="color:var(--muted);font-size:.875rem;text-align:center;padding:1rem 0">
+            Click "Get AI Tips" for personalised advice based on your vegetables.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- RECENT WASTE -->
+    <div class="card">
+      <div class="card-header">
+        <h2><i class="bi bi-trash3-fill" style="color:#e74c3c;margin-right:.4rem"></i> Recent Waste</h2>
+        <a href="{% url 'waste_log' %}" class="view-all">Log waste →</a>
+      </div>
+      <div class="card-body">
+        {% if recent_waste %}
+        <div class="waste-list">
+          {% for log in recent_waste %}
+          <div class="waste-item">
+            <div>
+              <div class="waste-item-name">{{ log.vegetable_name }}</div>
+              <div class="waste-item-detail">{{ log.get_reason_display }} · {{ log.date|date:"M d" }}</div>
+            </div>
+            <span class="waste-qty">{{ log.quantity_wasted }} items</span>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p style="color:var(--muted);font-size:.875rem;text-align:center;padding:1rem 0">
+          No waste logged yet. <a href="{% url 'waste_log' %}" style="color:var(--mid);font-weight:600">Start tracking →</a>
+        </p>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- QUICK ACTIONS -->
+    <div class="card">
+      <div class="card-header">
+        <h2><i class="bi bi-lightning-fill" style="color:var(--gold);margin-right:.4rem"></i> Quick Actions</h2>
+      </div>
+      <div class="card-body">
+        <div style="display:flex;flex-direction:column;gap:.75rem">
+          <a href="{% url 'scan_vegetable' %}" style="display:flex;align-items:center;gap:.875rem;padding:.875rem;background:var(--cream);border-radius:12px;text-decoration:none;border:1px solid var(--pale);transition:all .2s" onmouseover="this.style.borderColor='var(--light)'" onmouseout="this.style.borderColor='var(--pale)'">
+            <span style="font-size:1.5rem">🔍</span>
+            <div>
+              <div style="font-weight:600;font-size:.9rem;color:var(--forest)">Scan a Vegetable</div>
+              <div style="font-size:.75rem;color:var(--muted)">Get instant AI freshness analysis</div>
+            </div>
+            <i class="bi bi-chevron-right" style="margin-left:auto;color:var(--muted)"></i>
+          </a>
+          <a href="{% url 'add_vegetable' %}" style="display:flex;align-items:center;gap:.875rem;padding:.875rem;background:var(--cream);border-radius:12px;text-decoration:none;border:1px solid var(--pale);transition:all .2s" onmouseover="this.style.borderColor='var(--light)'" onmouseout="this.style.borderColor='var(--pale)'">
+            <span style="font-size:1.5rem">🌱</span>
+            <div>
+              <div style="font-weight:600;font-size:.9rem;color:var(--forest)">Add Vegetable</div>
+              <div style="font-size:.75rem;color:var(--muted)">Track a new vegetable</div>
+            </div>
+            <i class="bi bi-chevron-right" style="margin-left:auto;color:var(--muted)"></i>
+          </a>
+          <a href="{% url 'waste_log' %}" style="display:flex;align-items:center;gap:.875rem;padding:.875rem;background:var(--cream);border-radius:12px;text-decoration:none;border:1px solid var(--pale);transition:all .2s" onmouseover="this.style.borderColor='var(--light)'" onmouseout="this.style.borderColor='var(--pale)'">
+            <span style="font-size:1.5rem">🗑️</span>
+            <div>
+              <div style="font-weight:600;font-size:.9rem;color:var(--forest)">Log Waste</div>
+              <div style="font-size:.75rem;color:var(--muted)">Record discarded vegetables</div>
+            </div>
+            <i class="bi bi-chevron-right" style="margin-left:auto;color:var(--muted)"></i>
+          </a>
+          <a href="{% url 'analytics' %}" style="display:flex;align-items:center;gap:.875rem;padding:.875rem;background:var(--cream);border-radius:12px;text-decoration:none;border:1px solid var(--pale);transition:all .2s" onmouseover="this.style.borderColor='var(--light)'" onmouseout="this.style.borderColor='var(--pale)'">
+            <span style="font-size:1.5rem">📊</span>
+            <div>
+              <div style="font-weight:600;font-size:.9rem;color:var(--forest)">View Analytics</div>
+              <div style="font-size:.75rem;color:var(--muted)">Charts and waste trends</div>
+            </div>
+            <i class="bi bi-chevron-right" style="margin-left:auto;color:var(--muted)"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- VEGETABLE INVENTORY -->
+    <div class="card full-width">
+      <div class="card-header">
+        <h2><i class="bi bi-grid-fill" style="color:var(--light);margin-right:.4rem"></i> Vegetable Inventory</h2>
+        <a href="{% url 'add_vegetable' %}" class="btn-add" style="font-size:.78rem;padding:.4rem .9rem">
+          <i class="bi bi-plus"></i> Add
+        </a>
+      </div>
+      <div class="card-body">
+        {% if vegetables %}
+        <div class="veg-grid">
+          {% for veg in vegetables %}
+          <a href="{% url 'vegetable_detail' veg.pk %}" class="veg-card health-{{ veg.health_status }}">
+            {% if veg.photo %}
+            <img src="{{ veg.photo.url }}" alt="{{ veg.name }}" class="veg-photo">
+            {% else %}
+            <div class="veg-photo-placeholder">🥬</div>
+            {% endif %}
+            <div class="veg-info">
+              <strong>{{ veg.name }}</strong>
+              {% if veg.variety %}<small>{{ veg.variety }}</small>{% endif %}
+              <div>
+                <span class="health-badge {{ veg.health_status }}">{{ veg.get_health_status_display }}</span>
+              </div>
+              <small>Qty: {{ veg.quantity }} · {{ veg.planted_date|date:"M d, Y" }}</small>
+            </div>
+          </a>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+          <div class="empty-icon">🌱</div>
+          <h3>No vegetables yet</h3>
+          <p>Start by adding your first vegetable or scanning one from your kitchen.</p>
+          <a href="{% url 'add_vegetable' %}" class="btn-empty">
+            <i class="bi bi-plus-circle"></i> Add First Vegetable
+          </a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+  </div>
+</main>
+
 <script>
 async function loadTips() {
-  const btn = document.getElementById('loadTips');
+  const btn = document.getElementById('tipsBtn');
   const container = document.getElementById('tipsContainer');
-  btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Loading...';
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm" style="width:12px;height:12px;border-width:2px"></span> Loading...';
   btn.disabled = true;
   try {
     const resp = await fetch('/api/tips/');
     const data = await resp.json();
     if (data.success) {
-      const icons = {watering:'💧', pest:'🐛', nutrition:'🌿', harvest:'🌾', soil:'🪱'};
-      container.innerHTML = data.tips.map(t => `
+      const icons = { storage:'📦', meal_planning:'🍽️', freshness:'🥬', shopping:'🛒', watering:'💧', pest:'🐛', nutrition:'🌿', harvest:'🌾', soil:'🪱' };
+      container.innerHTML = '<div class="tips-grid">' + data.tips.map(t => `
         <div class="tip-card">
           <div class="tip-icon">${icons[t.category] || '💡'}</div>
-          <div><strong>${t.title}</strong><p>${t.tip}</p></div>
-        </div>`).join('');
+          <div>
+            <strong>${t.title}</strong>
+            <p>${t.tip}</p>
+          </div>
+        </div>`).join('') + '</div>';
     } else {
-      container.innerHTML = `<p class="text-danger">Could not load tips: ${data.error}</p>`;
+      container.innerHTML = `<p style="color:#e74c3c;font-size:.875rem">Could not load tips: ${data.error}</p>`;
     }
   } catch(e) {
-    container.innerHTML = '<p class="text-danger">Error connecting to AI.</p>';
+    container.innerHTML = '<p style="color:#e74c3c;font-size:.875rem">Error connecting to AI.</p>';
   }
-  btn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Refresh Tips';
+  btn.innerHTML = '<i class="bi bi-stars"></i> Refresh';
   btn.disabled = false;
 }
 </script>
-{% endblock %}
+<script src="/static/js/darkmode.js"></script>
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/static/sw.js")
+    .then(() => console.log("VeggieGuard SW registered"))
+    .catch(e => console.log("SW error:", e));
+}
+</script>
+</body>
+</html>
